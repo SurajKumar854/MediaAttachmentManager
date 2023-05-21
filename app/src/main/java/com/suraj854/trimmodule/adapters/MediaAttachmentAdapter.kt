@@ -60,12 +60,13 @@ class MediaAttachmentAdapter(
 
         fun bind(mediaItem: MediaItem) {
             if (mediaItem.isVideo) {
+                print(mediaItem.path)
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
                 mediaItemVideoView.start()
                 mediaItemVideoView.visibility = View.VISIBLE
 
             } else {
-                Log.e("Sirak", mediaItem.path)
+
                 mediaItemImageView.setImageURI(Uri.parse(mediaItem.path))
                 mediaItemVideoView.visibility = View.GONE
             }
