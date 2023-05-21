@@ -2,12 +2,13 @@ package com.suraj854.trimmodule.adapters
 
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.ImageView
+import android.widget.VideoView
 import androidx.recyclerview.widget.RecyclerView
 import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.interfaces.MediaItemClickListener
@@ -20,6 +21,7 @@ class MediaAttachmentAdapter(
     private val mediaItemClickListener: MediaItemClickListener
 ) :
     RecyclerView.Adapter<MediaAttachmentAdapter.MediaAttachmentViewHolder>() {
+
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -37,6 +39,8 @@ class MediaAttachmentAdapter(
 
 
         val mediaItem = mediaList.get(position)
+
+
         holder.bind(mediaItem)
     }
 
@@ -45,21 +49,26 @@ class MediaAttachmentAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        val mediaItem = mediaList.get(position)
-        if (mediaItem.isVideo) {
-            mediaItemClickListener.onTrimButtonClick()
-        } else {
-            mediaItemClickListener.onNonVideoItemClick()
-        }
+
         return super.getItemViewType(position)
     }
 
     inner class MediaAttachmentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val mediaItemTxt: TextView = itemView.findViewById(R.id.mediaTypeTxt)
+        private val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
+        val mediaItemImageView: ImageView = itemView.findViewById(R.id.imagePreview)
 
 
         fun bind(mediaItem: MediaItem) {
-            mediaItemTxt.text = mediaItem.path
+            if (mediaItem.isVideo) {
+                mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
+                mediaItemVideoView.start()
+                mediaItemVideoView.visibility = View.VISIBLE
+
+            } else {
+                Log.e("Sirak", mediaItem.path)
+                mediaItemImageView.setImageURI(Uri.parse(mediaItem.path))
+                mediaItemVideoView.visibility = View.GONE
+            }
 
 
         }

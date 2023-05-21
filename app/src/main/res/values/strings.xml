@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Video</string>
+    <string name="add_media">Add a photo / video (max 10 per moment)</string>
 </resources>
