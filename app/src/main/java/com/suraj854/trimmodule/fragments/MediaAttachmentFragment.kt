@@ -2,6 +2,7 @@ package com.suraj854.trimmodule.fragments
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -55,11 +56,14 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
                 CoroutineScope(Dispatchers.Main).launch {
                     val mediaItem = mediaList.get(position)
                     if (mediaItem.isVideo) {
-                        mediaItemViewPager2.getVideoViewAtPosition(position)?.let {
+                        mediaItemViewPager2.getVideoViewAtPosition(position)?.let {vv->
                             onTrimButtonClick(
                                 mediaItem,
-                                it
+                                vv,vv.duration.toLong()
                             )
+
+
+
                         }
                     } else {
                         onNonVideoItemClick()
@@ -79,9 +83,9 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
         trimLayoutListener = listener
     }
 
-    override fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView) {
+    override fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView,duration:Long) {
 
-        trimLayoutListener?.showTrimLayout(mediaItem, videoViewAtPosition)
+        trimLayoutListener?.showTrimLayout(mediaItem, videoViewAtPosition,duration)
 
     }
 

@@ -1,5 +1,6 @@
 package com.suraj854.trimmodule.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
@@ -9,9 +10,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.suraj854.trimmodule.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 class VideoTrimmerAdapter(private val context: Context) :
@@ -40,16 +38,14 @@ class VideoTrimmerAdapter(private val context: Context) :
 
     fun addBitmaps(bitmap: Bitmap) {
         mBitmaps.add(bitmap)
-        Log.e("printsss", "count" + count++)
         notifyDataSetChanged()
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun clearBitmapsList() {
-        CoroutineScope(Dispatchers.IO).launch {
-            mBitmaps.clear()
-        }
-
-
+        mBitmaps.clear()
+        count = 0
+        Log.e("Clear", "Bitmap")
         notifyDataSetChanged()
     }
 

@@ -1,6 +1,7 @@
 package com.suraj854.trimmodule.activities
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -126,6 +127,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
 
+    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_attachment)
@@ -152,7 +154,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
         mPlayView?.setOnClickListener({ playVideoOrPause() })
 
-        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
 
         addMediaBtn.setOnClickListener {
             if (checkCamStoragePer(this)) {
@@ -182,14 +183,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             val outputName = "trimmedVideo_$timeStamp.mp4"
 
 
-                mVideoView.pause()
-                val folder =
-                    File("/storage/emulated/0/Android" + "/Trimmed/")
+            mVideoView.pause()
+            val folder =
+                File("/storage/emulated/0/Android" + "/Trimmed/")
 
-                if (!folder.exists()) {
-                    folder.mkdirs()
-                }
-                Log.e("OutPath", "${folder.path}/$outputName")
+            if (!folder.exists()) {
+                folder.mkdirs()
+            }
+            Log.e("OutPath", "${folder.path}/$outputName")
             CoroutineScope(Dispatchers.Main).launch {
                 Transcoder.into("${folder.path}/$outputName")
 
@@ -262,9 +263,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     lateinit var mediaItem: MediaItem
-    override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView) {
+    override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView, duration: Long) {
         this.mediaItem = mediaItem
         this.mVideoView = videoView
+        this.mVideoView.requestFocus()
 
 
         videoView.setOnClickListener {
@@ -277,8 +279,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
+
         this.mVideoView.setOnPreparedListener { mp ->
             mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
+            Log.e("Loading..", "True")
             videoPrepared(Uri.parse(mediaItem.path), mp)
         }
 
@@ -288,9 +292,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    private fun videoPrepared(mSourceUri: Uri?, mp: MediaPlayer) {
+    private fun videoPrepared(mSourceUri: Uri?, mediaPlayer: MediaPlayer) {
+        mDuration = mediaPlayer.duration
 
-        mDuration = this.mVideoView.getDuration()
+        Log.e("Suraj",mDuration.toString())
+
         /*if (!getRestoreState()) {
               seekTo(mRedProgressBarPos.toInt().toLong())
           } else {
@@ -298,18 +304,24 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               seekTo(mRedProgressBarPos.toInt().toLong())
           }*/
 
-        initRangeSeekBarView()
 
 
 
+        CoroutineScope(Dispatchers.Main).launch {
 
+            Log.e("Duration", mDuration.toString())
+            initRangeSeekBarView()
             frameAdapter.clearBitmapsList()
             val mediaMetadataRetriever = MediaMetadataRetriever()
+
             mediaMetadataRetriever.setDataSource(
                 this@MediaAttachmentActivity,
                 mSourceUri
             )// Retrieve media data use microsecond
+
+
             val interval = (mDuration - 0) / (mThumbsTotalCount - 1)
+            Log.e("mThumbsTotalCount", mThumbsTotalCount.toString())
             for (i in 0 until mThumbsTotalCount) {
                 val frameTime = startPosition + interval * i
                 var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
@@ -326,6 +338,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         false
                     )
                 }
+
+
+
                 if (bitmap != null) {
                     frameAdapter.addBitmaps(bitmap)
                 }
@@ -333,8 +348,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
             }
             mediaMetadataRetriever.release()
-
-
+            }
 
 
     }
@@ -445,10 +459,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mRedProgressAnimator: ValueAnimator? = null
     private val mAnimationHandler = Handler()
     private fun playingRedProgressAnimation() {
-        pauseRedProgressAnimation()
-        playingAnimation()
-        mAnimationHandler.post(mAnimationRunnable)
+        if (mDuration > 0) {
+            pauseRedProgressAnimation()
+            playingAnimation()
+            mAnimationHandler.post(mAnimationRunnable)
+        }
     }
+
 
     private val mAnimationRunnable = Runnable { updateVideoProgress() }
     private fun calcScrollXDistance(): Int {

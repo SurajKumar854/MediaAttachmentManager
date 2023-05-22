@@ -62,7 +62,7 @@ class MediaAttachmentAdapter(
         fun bind(mediaItem: MediaItem) {
             if (mediaItem.isVideo) {
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
-                mediaItemVideoView.requestFocus()
+
                 mediaItemVideoView.visibility = View.VISIBLE
 
             } else {
