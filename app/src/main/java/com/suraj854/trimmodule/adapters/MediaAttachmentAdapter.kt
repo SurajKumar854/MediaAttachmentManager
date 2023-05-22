@@ -41,8 +41,7 @@ class MediaAttachmentAdapter(
 
         val mediaItem = mediaList.get(position)
 
-
-        holder.bind(mediaItem)
+         holder.bind(mediaItem)
     }
 
     override fun getItemCount(): Int {
@@ -66,12 +65,14 @@ class MediaAttachmentAdapter(
                 videoPreparedListener.onVideoPrepared(mediaItemVideoView)
 
             }
+
         }
 
         fun bind(mediaItem: MediaItem) {
+
+
             if (mediaItem.isVideo) {
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
-
                 mediaItemVideoView.visibility = View.VISIBLE
 
             } else {

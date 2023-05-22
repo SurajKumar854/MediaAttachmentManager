@@ -367,6 +367,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
+    override fun trimMediaItemListener(mmediaItem: MediaItem) {
+        if (mmediaItem.isVideo) {
+            videoPrepared(Uri.parse(mmediaItem.path))
+        }
+
+    }
+
     override fun trimVideoVideoListener(videoView: VideoView) {
         this.mVideoView = videoView
         this.mVideoView.requestFocus()
@@ -381,7 +388,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
         }
         mDuration = videoView.duration
-        videoPrepared(Uri.parse(mediaItem.path))
+        Log.e("mediaItem", mediaItem.path)
+
     }
 
     private fun initRangeSeekBarView() {

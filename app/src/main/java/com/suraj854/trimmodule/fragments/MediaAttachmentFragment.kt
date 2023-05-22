@@ -56,6 +56,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
 
                 CoroutineScope(Dispatchers.Main).launch {
                     val mediaItem = mediaList.get(position)
+                    onMediaItemListener(mediaItem)
                     if (mediaItem.isVideo) {
                         Log.e("Second", "Suraj")
                         mediaItemViewPager2.getVideoViewAtPosition(position)?.let {vv->
@@ -107,5 +108,9 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
     override fun onVideoPrepared(videoView: VideoView) {
         videoView.start()
         trimLayoutListener?.trimVideoVideoListener(videoView)
+    }
+
+    override fun onMediaItemListener(mediaItem: MediaItem) {
+        trimLayoutListener?.trimMediaItemListener(mediaItem)
     }
 }

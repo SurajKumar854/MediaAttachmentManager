@@ -6,6 +6,7 @@ import com.suraj854.trimmodule.models.MediaItem
 interface TrimLayoutListener {
     fun showTrimLayout(mediaItem: MediaItem, videoViewAtPosition: VideoView)
     fun hideTrimLayout()
+    fun trimMediaItemListener(mediaItem: MediaItem)
 
     fun trimVideoVideoListener(video: VideoView)
 }
