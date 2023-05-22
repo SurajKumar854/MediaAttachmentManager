@@ -5,7 +5,7 @@ import com.suraj854.trimmodule.models.MediaItem
 import java.time.Duration
 
 interface MediaItemClickListener {
-    fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView,duration: Long)
+    fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView)
     fun onNonVideoItemClick()
 
 }

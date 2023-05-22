@@ -59,7 +59,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
                         mediaItemViewPager2.getVideoViewAtPosition(position)?.let {vv->
                             onTrimButtonClick(
                                 mediaItem,
-                                vv,vv.duration.toLong()
+                                vv
                             )
 
 
@@ -83,9 +83,9 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
         trimLayoutListener = listener
     }
 
-    override fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView,duration:Long) {
+    override fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView) {
 
-        trimLayoutListener?.showTrimLayout(mediaItem, videoViewAtPosition,duration)
+        trimLayoutListener?.showTrimLayout(mediaItem, videoViewAtPosition)
 
     }
 

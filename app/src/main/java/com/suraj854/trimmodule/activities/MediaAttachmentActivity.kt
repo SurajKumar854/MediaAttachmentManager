@@ -147,11 +147,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         video_frames_recyclerView = findViewById(R.id.video_frames_recyclerView)
         video_frames_recyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
         frameAdapter = VideoTrimmerAdapter(this)
 
 
         video_frames_recyclerView.adapter = frameAdapter
-        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+
         mPlayView?.setOnClickListener({ playVideoOrPause() })
 
 
@@ -263,7 +264,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     lateinit var mediaItem: MediaItem
-    override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView, duration: Long) {
+    override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView) {
         this.mediaItem = mediaItem
         this.mVideoView = videoView
         this.mVideoView.requestFocus()
@@ -282,7 +283,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         this.mVideoView.setOnPreparedListener { mp ->
             mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
-            Log.e("Loading..", "True")
+
             videoPrepared(Uri.parse(mediaItem.path), mp)
         }
 
@@ -293,9 +294,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     private fun videoPrepared(mSourceUri: Uri?, mediaPlayer: MediaPlayer) {
-        mDuration = mediaPlayer.duration
+        mDuration = mVideoView.duration
 
-        Log.e("Suraj",mDuration.toString())
+
 
         /*if (!getRestoreState()) {
               seekTo(mRedProgressBarPos.toInt().toLong())
@@ -303,14 +304,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               setRestoreState(false)
               seekTo(mRedProgressBarPos.toInt().toLong())
           }*/
-
-
-
-
+        initRangeSeekBarView()
         CoroutineScope(Dispatchers.Main).launch {
-
-            Log.e("Duration", mDuration.toString())
-            initRangeSeekBarView()
             frameAdapter.clearBitmapsList()
             val mediaMetadataRetriever = MediaMetadataRetriever()
 
@@ -338,17 +333,17 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         false
                     )
                 }
-
-
-
                 if (bitmap != null) {
+
                     frameAdapter.addBitmaps(bitmap)
                 }
 
-
             }
             mediaMetadataRetriever.release()
-            }
+
+        }
+
+
 
 
     }
@@ -459,11 +454,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mRedProgressAnimator: ValueAnimator? = null
     private val mAnimationHandler = Handler()
     private fun playingRedProgressAnimation() {
-        if (mDuration > 0) {
+
             pauseRedProgressAnimation()
             playingAnimation()
             mAnimationHandler.post(mAnimationRunnable)
-        }
+
     }
 
 
@@ -533,9 +528,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
+                var scrollX: Int = 0
                 isSeeking = false
-                val scrollX: Int = calcScrollXDistance()
-
+                try {
+                    scrollX = calcScrollXDistance()
+                } catch (e: java.lang.Exception) {
+                    scrollX = 0
+                }
                 if (Math.abs(lastScrollX - scrollX) < mScaledTouchSlop) {
                     isOverScaledTouchSlop = false
                     return
