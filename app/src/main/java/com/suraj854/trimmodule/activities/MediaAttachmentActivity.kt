@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.media.MediaMetadataRetriever
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -52,6 +51,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -266,26 +266,39 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var mediaItem: MediaItem
     override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView) {
         this.mediaItem = mediaItem
-        this.mVideoView = videoView
-        this.mVideoView.requestFocus()
 
 
-        videoView.setOnClickListener {
+        /*
+                if (mVideoView.isPlaying || videoView.currentPosition >= 0) {
 
-            if (mVideoView.isPlaying) {
-                mVideoView.pause()
-                Toast.makeText(this, "Pause", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "resume", Toast.LENGTH_SHORT).show()
-                mVideoView.start()
-            }
-        }
+                    mVideoView.setOnPreparedListener(null)
+                    mVideoView.setOnPreparedListener { mp ->
+                        mVideoView.start()
 
-        this.mVideoView.setOnPreparedListener { mp ->
-            mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
 
-            videoPrepared(Uri.parse(mediaItem.path), mp)
-        }
+                        Log.e("Started time", "setOnPreparedListener")
+
+                    }
+                    mVideoView.setOnCompletionListener {
+
+                        Log.e("completed time", "setOnPreparedListener")
+                    }
+                    mVideoView.setOnErrorListener(object : MediaPlayer.OnErrorListener {
+                        override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
+
+                            Log.e("Error time", "setOnPreparedListener")
+                            return false
+                        }
+
+                    })
+                } else {
+                    Log.e("First time", "setOnPreparedListener")
+                    this.mVideoView.setOnPreparedListener(null)
+                    this.mVideoView.setOnPreparedListener { mp ->
+                        mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
+                        videoPrepared(Uri.parse(mediaItem.path), mp)
+                    }
+                }*/
 
 
 
@@ -293,9 +306,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    private fun videoPrepared(mSourceUri: Uri?, mediaPlayer: MediaPlayer) {
-        mDuration = mVideoView.duration
-
+    private fun videoPrepared(mSourceUri: Uri?) {
+        Log.e("During", mDuration.toString())
 
 
         /*if (!getRestoreState()) {
@@ -304,8 +316,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               setRestoreState(false)
               seekTo(mRedProgressBarPos.toInt().toLong())
           }*/
+
         initRangeSeekBarView()
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.Default).launch {
             frameAdapter.clearBitmapsList()
             val mediaMetadataRetriever = MediaMetadataRetriever()
 
@@ -319,31 +332,30 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             Log.e("mThumbsTotalCount", mThumbsTotalCount.toString())
             for (i in 0 until mThumbsTotalCount) {
                 val frameTime = startPosition + interval * i
-                var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
+                var bitmap: Bitmap = mediaMetadataRetriever.getFrameAtTime(
                     (frameTime * 1000).toLong(),
                     MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                 )
                     ?: continue
 
-                bitmap = bitmap?.let {
-                    Bitmap.createScaledBitmap(
-                        it,
-                        VideoTrimmerUtil.THUMB_WIDTH,
-                        VideoTrimmerUtil.THUMB_HEIGHT,
-                        false
-                    )
-                }
+                bitmap = Bitmap.createScaledBitmap(
+                    bitmap,
+                    VideoTrimmerUtil.THUMB_WIDTH,
+                    VideoTrimmerUtil.THUMB_HEIGHT,
+                    false
+                )
                 if (bitmap != null) {
+                    withContext(Dispatchers.Main) {
+                        frameAdapter.addBitmaps(bitmap)
+                    }
 
-                    frameAdapter.addBitmaps(bitmap)
+
                 }
 
             }
             mediaMetadataRetriever.release()
 
         }
-
-
 
 
     }
@@ -353,6 +365,23 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         trimLL.visibility = View.GONE
 
+    }
+
+    override fun trimVideoVideoListener(videoView: VideoView) {
+        this.mVideoView = videoView
+        this.mVideoView.requestFocus()
+        videoView.setOnClickListener {
+
+            if (mVideoView.isPlaying) {
+                mVideoView.pause()
+                Toast.makeText(this, "Pause", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "resume", Toast.LENGTH_SHORT).show()
+                mVideoView.start()
+            }
+        }
+        mDuration = videoView.duration
+        videoPrepared(Uri.parse(mediaItem.path))
     }
 
     private fun initRangeSeekBarView() {

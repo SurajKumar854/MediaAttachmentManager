@@ -11,13 +11,15 @@ import android.widget.VideoView
 import androidx.recyclerview.widget.RecyclerView
 import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.interfaces.MediaItemClickListener
+import com.suraj854.trimmodule.interfaces.VideoPreparedListener
 import com.suraj854.trimmodule.models.MediaItem
 
 
 class MediaAttachmentAdapter(
     private val context: Context,
     private val mediaList: List<MediaItem>,
-    private val mediaItemClickListener: MediaItemClickListener
+    private val mediaItemClickListener: MediaItemClickListener,
+    private val videoPreparedListener: VideoPreparedListener
 ) :
     RecyclerView.Adapter<MediaAttachmentAdapter.MediaAttachmentViewHolder>() {
 
@@ -58,6 +60,13 @@ class MediaAttachmentAdapter(
         val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
         val mediaItemImageView: ImageView = itemView.findViewById(R.id.imagePreview)
 
+        init {
+
+            mediaItemVideoView.setOnPreparedListener { mediaPlayer ->
+                videoPreparedListener.onVideoPrepared(mediaItemVideoView)
+
+            }
+        }
 
         fun bind(mediaItem: MediaItem) {
             if (mediaItem.isVideo) {

@@ -15,12 +15,13 @@ import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.adapters.MediaAttachmentAdapter
 import com.suraj854.trimmodule.interfaces.MediaItemClickListener
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
+import com.suraj854.trimmodule.interfaces.VideoPreparedListener
 import com.suraj854.trimmodule.models.MediaItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
+class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPreparedListener {
     private lateinit var mediaItemViewPager2: ViewPager2
     private lateinit var mediaAttachmentAdapter: MediaAttachmentAdapter
     private var mediaList = mutableListOf<MediaItem>()
@@ -47,7 +48,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
             R.layout.media_attachment_fragment, container, false
         )
         mediaItemViewPager2 = item.findViewById(R.id.mediaAttachmentVP)
-        mediaAttachmentAdapter = MediaAttachmentAdapter(requireContext(), mediaList, this)
+        mediaAttachmentAdapter = MediaAttachmentAdapter(requireContext(), mediaList, this, this)
         mediaItemViewPager2.adapter = mediaAttachmentAdapter
         mediaItemViewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -56,6 +57,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
                 CoroutineScope(Dispatchers.Main).launch {
                     val mediaItem = mediaList.get(position)
                     if (mediaItem.isVideo) {
+                        Log.e("Second", "Suraj")
                         mediaItemViewPager2.getVideoViewAtPosition(position)?.let {vv->
                             onTrimButtonClick(
                                 mediaItem,
@@ -100,5 +102,10 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener {
         mediaAttachmentAdapter.notifyDataSetChanged()
 
 
+    }
+
+    override fun onVideoPrepared(videoView: VideoView) {
+        videoView.start()
+        trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 }
