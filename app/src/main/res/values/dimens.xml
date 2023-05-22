@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="progress_video_line_height">2dp</dimen>
+    <dimen name="frames_video_height">40dip</dimen>
+    <string name="back">Back</string>
+    <string name="video_shoot_tip">Drag to select the segment within %d second that you want to post！</string>
+
+    <string name="finish">Finish</string>
+</resources>

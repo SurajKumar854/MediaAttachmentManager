@@ -3,7 +3,6 @@ package com.suraj854.trimmodule.adapters
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,21 +47,22 @@ class MediaAttachmentAdapter(
         return mediaList.size
     }
 
+
     override fun getItemViewType(position: Int): Int {
 
         return super.getItemViewType(position)
     }
 
+
     inner class MediaAttachmentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
+        val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
         val mediaItemImageView: ImageView = itemView.findViewById(R.id.imagePreview)
 
 
         fun bind(mediaItem: MediaItem) {
             if (mediaItem.isVideo) {
-                print(mediaItem.path)
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
-                mediaItemVideoView.start()
+                mediaItemVideoView.requestFocus()
                 mediaItemVideoView.visibility = View.VISIBLE
 
             } else {
