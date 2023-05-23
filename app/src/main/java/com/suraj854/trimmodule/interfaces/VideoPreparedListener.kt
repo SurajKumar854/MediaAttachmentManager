@@ -4,6 +4,6 @@ import android.widget.VideoView
 import com.suraj854.trimmodule.models.MediaItem
 
 interface VideoPreparedListener {
-    fun onVideoPrepared(videoView: VideoView)
-    fun onMediaItemListener(mediaItem: MediaItem)
+    suspend fun onVideoPrepared(videoView: VideoView)
+    suspend fun onMediaItemListener(mediaItem: MediaItem)
 }

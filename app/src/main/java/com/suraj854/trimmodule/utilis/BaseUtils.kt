@@ -17,4 +17,6 @@ object BaseUtils {
             requireNotNull(mWeakReferenceContext) { ERROR_INIT }
             return mWeakReferenceContext!!.get()!!.applicationContext
         }
+
+
 }

@@ -19,8 +19,8 @@ import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.widget.DateUtil
 import com.suraj854.videotrimmerview.utilis.UnitConverter
-
 import com.suraj854.videotrimmerview.widget.RangeSeekBarView
+import kotlinx.coroutines.flow.flow
 import java.text.DecimalFormat
 
 class RangeSeekBarView : View {
@@ -133,6 +133,11 @@ class RangeSeekBarView : View {
         setMeasuredDimension(width, height)
     }
 
+    fun getNormalisedValues(): kotlinx.coroutines.flow.Flow<Long> = flow<Long> {
+        emit(normalizedMinValue.toLong())
+    }
+
+
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -158,9 +163,12 @@ class RangeSeekBarView : View {
             height.toFloat(),
             rectPaint!!
         )
+        getNormalisedValues()
+        mRangeSeekBarChangeListener?.onNormaliseValuesChanged(normalizedToScreen(normalizedMinValue),normalizedToScreen(normalizedMaxValue))
+
         drawThumb(normalizedToScreen(normalizedMinValue), false, canvas, true)
         drawThumb(normalizedToScreen(normalizedMaxValue), false, canvas, false)
-        drawVideoTrimTimeText(canvas)
+     /*   drawVideoTrimTimeText(canvas)*/
     }
 
     private fun drawThumb(screenCoord: Float, pressed: Boolean, canvas: Canvas, isLeft: Boolean) {
@@ -175,6 +183,7 @@ class RangeSeekBarView : View {
     private fun drawVideoTrimTimeText(canvas: Canvas) {
         val leftThumbsTime = DateUtil.convertSecondsToTime(mStartPosition)
         val rightThumbsTime = DateUtil.convertSecondsToTime(mEndPosition)
+
         canvas.drawText(
             leftThumbsTime,
             normalizedToScreen(normalizedMinValue),
@@ -187,7 +196,9 @@ class RangeSeekBarView : View {
             TextPositionY.toFloat(),
             mVideoTrimTimePaintR
         )
+
     }
+
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (isTouchDown) {
@@ -469,6 +480,7 @@ class RangeSeekBarView : View {
     }
 
     fun setStartEndTime(start: Long, end: Long) {
+
         mStartPosition = start / 1000
         mEndPosition = end / 1000
     }
@@ -492,6 +504,12 @@ class RangeSeekBarView : View {
                 setNormalizedMinValue(valueToNormalized(value))
             }
         }
+    var selectedNormalizedMinValue: Float
+        get() = normalizedToScreen(normalizedMinValue)
+        set(value) {
+            normalizedToScreen(normalizedMinValue)
+        }
+
     var selectedMaxValue: Long
         get() = normalizedToValue(normalizedMaxValueTime)
         set(value) {
@@ -535,8 +553,14 @@ class RangeSeekBarView : View {
             minValue: Long,
             maxValue: Long,
             action: Int,
+
             isMin: Boolean,
             pressedThumb: Thumb?
+        )
+
+        fun onNormaliseValuesChanged(
+            min: Float,
+            max: Float
         )
     }
 

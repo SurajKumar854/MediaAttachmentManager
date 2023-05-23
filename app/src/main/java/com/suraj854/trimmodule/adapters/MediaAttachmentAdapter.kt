@@ -13,6 +13,9 @@ import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.interfaces.MediaItemClickListener
 import com.suraj854.trimmodule.interfaces.VideoPreparedListener
 import com.suraj854.trimmodule.models.MediaItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MediaAttachmentAdapter(
@@ -62,7 +65,10 @@ class MediaAttachmentAdapter(
         init {
 
             mediaItemVideoView.setOnPreparedListener { mediaPlayer ->
-                videoPreparedListener.onVideoPrepared(mediaItemVideoView)
+                CoroutineScope(Dispatchers.Main).launch {
+                    videoPreparedListener.onVideoPrepared(mediaItemVideoView)
+                }
+
 
             }
 

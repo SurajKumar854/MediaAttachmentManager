@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Rect
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
@@ -26,7 +25,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
 import com.otaliastudios.transcoder.source.TrimDataSource
@@ -38,6 +36,7 @@ import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.models.MediaItem
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.checkCamStoragePer
+import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.convertSecondsToTime
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.getMediaType
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.MAX_COUNT_RANGE
@@ -50,6 +49,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -71,6 +72,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var mVideoView: VideoView
     lateinit var mPostBtn: Button
     lateinit var mTrimBtn: TextView
+    lateinit var mStartTimeTxt: TextView
+    lateinit var mEndTimeTxt: TextView
 
     private val endPosition = 0
     private var startPosition = 0
@@ -87,11 +90,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mThumbsTotalCount = 0
     private var scrollPos: Long = 0
     private var isSeeking = false
-    private var itemDecoration: SpacesItemDecoration2? = null
+
     private var myCoroutineJob: Job? = null
     init {
 
     }
+
 
 
     private val addMediaChooserResult =
@@ -111,7 +115,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         }
 
                         val mediaType = uri?.uri?.let { getMediaType(it) }
-                        Log.e("Suraj", uri?.uri.toString())
                         if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                             // Process as an image
 
@@ -123,7 +126,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     }
 
                 } else if (result.data != null) {
+                    val uri = result?.data?.data
+                    val mediaType = uri?.let { getMediaType(it) }
+                    if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
+                        // Process as an image
 
+                        fragment.addMediaItem(MediaItem(uri.toString(), false))
+                    } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
+                        // Process as a video
+                        fragment.addMediaItem(MediaItem(uri.toString(), true))
+                    }
                 }
 
             }
@@ -146,6 +158,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mTrimBtn = findViewById(R.id.trimBtn)
         seekBarLayout = findViewById(R.id.seekBarLayout)
         mRedProgressIcon = findViewById<ImageView>(R.id.positionIcon)
+        mStartTimeTxt = findViewById(R.id.startTime)
+        mStartTimeTxt.text = "00:00"
+        mEndTimeTxt = findViewById(R.id.endTime)
         mMaxWidth = VIDEO_FRAMES_WIDTH
         video_frames_recyclerView = findViewById(R.id.video_frames_recyclerView)
         video_frames_recyclerView.layoutManager =
@@ -310,6 +325,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
+    override fun onStart() {
+        super.onStart()
+    }
+
     private fun videoPrepared(mSourceUri: Uri?) {
 
         Log.e("mSourceUri", mSourceUri?.path.toString())
@@ -335,12 +354,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
             val interval = (mDuration - startPosition) / (mThumbsTotalCount - 1)
-            Log.e("mThumbsTotalCount", mThumbsTotalCount.toString())
-            Log.e("mThumbsTotalCount", interval.toString())
             for (i in 0 until mThumbsTotalCount) {
                 delay(5)
                 val frameTime: Long = startPosition + interval * i.toLong()
-                Log.e("Kkk", "$i")
+
                 var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
                     (frameTime * 1000),
                     MediaMetadataRetriever.OPTION_CLOSEST_SYNC
@@ -378,18 +395,21 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    override fun trimMediaItemListener(mmediaItem: MediaItem) {
+    override suspend fun trimMediaItemListener(mmediaItem: MediaItem) {
         if (mmediaItem.isVideo) {
             if (frameAdapter?.itemCount!! >= 0) {
                 frameAdapter?.clearBitmapsList()
                 if (myCoroutineJob !== null) {
                     myCoroutineJob?.let {
                         if (it.isActive) {
+                            Log.e("Courtine", "Cancel")
                             it.cancel()
+
                         }
                     }
                 }
                 videoPrepared(Uri.parse(mmediaItem.path))
+
             }
 
 
@@ -397,7 +417,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    override fun trimVideoVideoListener(video: VideoView) {
+    fun mDurationFlow(duration: Long): Flow<Long> = flow {
+        emit(duration)
+    }
+
+    override suspend fun trimVideoVideoListener(video: VideoView) {
 
         this.mVideoView = video
         this.mVideoView.requestFocus()
@@ -411,24 +435,25 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
-        mDuration = video.duration
-        Log.e("Bitmap", "Clear")
-        video_frames_recyclerView.clearOnScrollListeners()
+        mDurationFlow(video.duration.toLong()).collect {
+            mDuration = it.toInt()
+            initRangeSeekBarView(mDuration)
+            Log.e("mDuration", it.toString())
+        }
 
 
-        initRangeSeekBarView()
-        Log.e("Bitmap", "Added")
     }
 
-    private fun initRangeSeekBarView() {
+
+    private fun initRangeSeekBarView(duration: Int) {
 
         mLeftProgressPos = 0
-        if (mDuration <= MAX_SHOOT_DURATION) {
+        if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            mRightProgressPos = mDuration.toLong()
+            mRightProgressPos = duration.toLong()
         } else {
 
-            mThumbsTotalCount = (((mDuration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
+            mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
             mRightProgressPos = MAX_SHOOT_DURATION
 
@@ -445,9 +470,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView.selectedMaxValue = mRightProgressPos
-        mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+        //  mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+        mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
+        mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+        Log.e("Selected", "${mRangeSeekBarView.selectedMinValue}")
         mRangeSeekBarView.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
+
         mRangeSeekBarView.isNotifyWhileDragging = true
+
+
         mRangeSeekBarView.setOnRangeSeekBarChangeListener(object :
             RangeSeekBarView.OnRangeSeekBarChangeListener {
 
@@ -459,6 +490,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 isMin: Boolean,
                 pressedThumb: RangeSeekBarView.Thumb?
             ) {
+
+                Log.e("New poist", "${bar?.selectedMinValue}")
+                mEndTimeTxt.x = maxValue.toFloat() / 10
                 mLeftProgressPos = minValue + scrollPos
                 mRedProgressBarPos = mLeftProgressPos
                 mRightProgressPos = maxValue + scrollPos
@@ -483,15 +517,21 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                     }
                 }
+                mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
+                mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
 
-                mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+            }
+
+            override fun onNormaliseValuesChanged(min: Float, max: Float) {
+                mStartTimeTxt.x = min
+                mEndTimeTxt.x = max
             }
 
         })
         seekBarLayout.addView(mRangeSeekBarView)
         if (mThumbsTotalCount - MAX_COUNT_RANGE > 0) {
             mAverageMsPx =
-                (mDuration - MAX_SHOOT_DURATION) / (mThumbsTotalCount - MAX_COUNT_RANGE).toFloat()
+                (duration - MAX_SHOOT_DURATION) / (mThumbsTotalCount - MAX_COUNT_RANGE).toFloat()
         } else {
             mAverageMsPx = 0f
         }
@@ -527,28 +567,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    private fun addItemDecoration(thumbnailsCountValue: Int) {
-        // Check if itemDecoration already exists and remove it
-        if (itemDecoration != null) {
-            Log.e("Removed", "removeItemDecoration")
-            video_frames_recyclerView.removeItemDecoration(itemDecoration!!)
-        } else {
-            // Create a new instance of the item decoration
-            itemDecoration = SpacesItemDecoration2(RECYCLER_VIEW_PADDING, thumbnailsCountValue)
-
-            // Add the item decoration to the RecyclerView
-            video_frames_recyclerView.addItemDecoration(itemDecoration!!)
-        }
 
 
-    }
-
-    private fun removeItemDecoration() {
-        if (itemDecoration != null) {
-            video_frames_recyclerView.removeItemDecoration(itemDecoration!!)
-            itemDecoration = null
-        }
-    }
 
     private val mAnimationRunnable = Runnable { updateVideoProgress() }
     private fun calcScrollXDistance(): Int {
@@ -617,40 +637,51 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 var scrollX: Int = 0
+
                 isSeeking = false
-                try {
-                    scrollX = calcScrollXDistance()
-                } catch (e: java.lang.Exception) {
-                    scrollX = 0
-                }
-                if (Math.abs(lastScrollX - scrollX) < mScaledTouchSlop) {
-                    isOverScaledTouchSlop = false
-                    return
-                }
-                isOverScaledTouchSlop = true
+                CoroutineScope(Dispatchers.Default).launch {
+                    try {
+                        scrollX = calcScrollXDistance()
 
-                if (scrollX == -RECYCLER_VIEW_PADDING) {
-                    scrollPos = 0
-                    mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                    mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-
-                    mRedProgressBarPos = mLeftProgressPos
-                } else {
-                    isSeeking = true
-                    scrollPos =
-                        ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
-                    mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                    mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-
-                    mRedProgressBarPos = mLeftProgressPos
-                    if (mVideoView.isPlaying()) {
-                        mVideoView.pause()
-                        setPlayPauseViewIcon(false)
+                    } catch (e: java.lang.Exception) {
+                        scrollX = 0
                     }
-                    mRedProgressIcon.setVisibility(View.GONE)
-                    seekTo(mLeftProgressPos)
-                    mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-                    mRangeSeekBarView.invalidate()
+                    if (Math.abs(lastScrollX - scrollX) < mScaledTouchSlop) {
+                        isOverScaledTouchSlop = false
+
+                    }
+                    isOverScaledTouchSlop = true
+
+                    if (scrollX == -RECYCLER_VIEW_PADDING) {
+                        scrollPos = 0
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+
+                        mRedProgressBarPos = mLeftProgressPos
+                    } else {
+                        isSeeking = true
+                        scrollPos =
+                            ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                        Log.e("croll", "${mRangeSeekBarView.selectedMinValue + scrollPos}")
+                        mRedProgressBarPos = mLeftProgressPos
+
+                        withContext(Dispatchers.Main) {
+                            if (mVideoView.isPlaying()) {
+                                mVideoView.pause()
+                                setPlayPauseViewIcon(false)
+                            }
+                            mRedProgressIcon.setVisibility(View.GONE)
+                            seekTo(mLeftProgressPos)
+                            mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
+                            mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+                            mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+                            mRangeSeekBarView.invalidate()
+                        }
+                    }
+
+
                 }
                 lastScrollX = scrollX
             }
@@ -664,21 +695,3 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 }
 
-class SpacesItemDecoration2(private val space: Int = 0, private val thumbnailsCount: Int = 0) :
-    ItemDecoration() {
-    override fun getItemOffsets(
-        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
-    ) {
-        val position = parent.getChildAdapterPosition(view)
-        if (position == 0) {
-            outRect.left = space
-            outRect.right = 0
-        } else if (thumbnailsCount > 10 && position == thumbnailsCount - 1) {
-            outRect.left = 0
-            outRect.right = space
-        } else {
-            outRect.left = 0
-            outRect.right = 0
-        }
-    }
-}
