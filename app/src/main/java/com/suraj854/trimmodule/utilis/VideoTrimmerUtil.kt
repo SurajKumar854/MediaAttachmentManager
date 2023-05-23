@@ -2,10 +2,8 @@ package com.suraj854.trimmodule.utilis
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.text.TextUtils
+import android.util.Log
 import com.suraj854.videotrimmerview.utilis.BaseUtils
 import com.suraj854.videotrimmerview.utilis.DeviceUtil
 import com.suraj854.videotrimmerview.utilis.UnitConverter
@@ -47,7 +45,8 @@ class VideoTrimmerUtil() {
             this.context = context.applicationContext
             DeviceUtil.initialize(this.context)
             BaseUtils.init(this.context)
-            SCREEN_WIDTH_FULL = DeviceUtil.deviceWidth
+            SCREEN_WIDTH_FULL = DeviceUtil.deviceWidth - 256
+            Log.e("SCREEN_WIDTH_FULL", SCREEN_WIDTH_FULL.toString())
             VIDEO_FRAMES_WIDTH = SCREEN_WIDTH_FULL - RECYCLER_VIEW_PADDING * 2
             RECYCLER_VIEW_PADDING = UnitConverter().dpToPx(35)
             THUMB_HEIGHT = UnitConverter().dpToPx(50)

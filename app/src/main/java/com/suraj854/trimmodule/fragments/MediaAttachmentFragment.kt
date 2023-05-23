@@ -104,7 +104,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
     }
 
     override suspend fun onVideoPrepared(videoView: VideoView) {
-        videoView.seekTo(1)
+
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 

@@ -433,41 +433,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var mediaItem: MediaItem
     override fun showTrimLayout() {
 
-
-        /*
-                if (mVideoView.isPlaying || videoView.currentPosition >= 0) {
-
-                    mVideoView.setOnPreparedListener(null)
-                    mVideoView.setOnPreparedListener { mp ->
-                        mVideoView.start()
-
-
-                        Log.e("Started time", "setOnPreparedListener")
-
-                    }
-                    mVideoView.setOnCompletionListener {
-
-                        Log.e("completed time", "setOnPreparedListener")
-                    }
-                    mVideoView.setOnErrorListener(object : MediaPlayer.OnErrorListener {
-                        override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
-
-                            Log.e("Error time", "setOnPreparedListener")
-                            return false
-                        }
-
-                    })
-                } else {
-                    Log.e("First time", "setOnPreparedListener")
-                    this.mVideoView.setOnPreparedListener(null)
-                    this.mVideoView.setOnPreparedListener { mp ->
-                        mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
-                        videoPrepared(Uri.parse(mediaItem.path), mp)
-                    }
-                }*/
-
-
-
         trimLL.visibility = View.VISIBLE
 
     }
@@ -682,7 +647,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         //  mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
         mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
         mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
-        Log.e("Selected", "${mRangeSeekBarView.selectedMinValue}")
         mRangeSeekBarView.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
         mRangeSeekBarView.isNotifyWhileDragging = true
@@ -700,7 +664,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 pressedThumb: RangeSeekBarView.Thumb?
             ) {
 
-                Log.e("New poist", "${bar?.selectedMinValue}")
                 mEndTimeTxt.x = maxValue.toFloat() / 10
                 mLeftProgressPos = minValue + scrollPos
                 mRedProgressBarPos = mLeftProgressPos
@@ -746,6 +709,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mAverageMsPx = 0f
         }
         averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
+        Log.e(
+            "averagePxMs",
+            "mMaxWidth" + mMaxWidth + "/ mRightProgressPos->" + mRightProgressPos + "mLeftProgressPos->" + mLeftProgressPos
+        )
 
     }
 
@@ -828,6 +795,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         val end = (RECYCLER_VIEW_PADDING + (mRightProgressPos - scrollPos) * averagePxMs).toInt()
         mRedProgressAnimator = ValueAnimator.ofInt(start, end)
             .setDuration(mRightProgressPos - scrollPos - (mRedProgressBarPos - scrollPos))
+        Log.e("Surajs", "start$start+/$end")
+        Log.e("Surajs", "RECYCLER_VIEW_PADDINg$RECYCLER_VIEW_PADDING")
+        Log.e("Surajs", "scrollPos$scrollPos")
+        Log.e("Surajs", "mRightProgressPos$mRedProgressBarPos")
+        Log.e("Surajs", "averagePxMs$averagePxMs")
         mRedProgressAnimator?.interpolator = LinearInterpolator()
         mRedProgressAnimator?.addUpdateListener(ValueAnimator.AnimatorUpdateListener { animation ->
             params.leftMargin = animation.animatedValue as Int
@@ -874,7 +846,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
                         mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
                         mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-                        Log.e("croll", "${mRangeSeekBarView.selectedMinValue + scrollPos}")
+
                         mRedProgressBarPos = mLeftProgressPos
 
                         withContext(Dispatchers.Main) {
