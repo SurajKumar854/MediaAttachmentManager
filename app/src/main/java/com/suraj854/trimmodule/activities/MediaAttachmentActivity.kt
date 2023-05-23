@@ -382,6 +382,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         if (mmediaItem.isVideo) {
             if (frameAdapter?.itemCount!! >= 0) {
                 frameAdapter?.clearBitmapsList()
+                if (myCoroutineJob !== null) {
+                    myCoroutineJob?.let {
+                        if (it.isActive) {
+                            it.cancel()
+                        }
+                    }
+                }
                 videoPrepared(Uri.parse(mmediaItem.path))
             }
 
@@ -391,13 +398,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     override fun trimVideoVideoListener(video: VideoView) {
-        if (myCoroutineJob !== null) {
-            myCoroutineJob?.let {
-                if (it.isActive) {
-                    it.cancel()
-                }
-            }
-        }
+
         this.mVideoView = video
         this.mVideoView.requestFocus()
         this.mVideoView.setOnClickListener {
