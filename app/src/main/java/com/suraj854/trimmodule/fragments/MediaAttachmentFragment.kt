@@ -76,6 +76,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
     }
 
 
+
     fun setTrimLayoutListener(listener: TrimLayoutListener) {
         trimLayoutListener = listener
     }

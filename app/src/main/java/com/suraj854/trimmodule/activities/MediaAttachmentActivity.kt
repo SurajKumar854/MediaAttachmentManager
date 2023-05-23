@@ -48,6 +48,7 @@ import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.VIDEO_FR
 import com.suraj854.videotrimmerview.widget.RangeSeekBarView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,7 +73,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var mTrimBtn: TextView
 
     private val endPosition = 0
-    private val startPosition = 0
+    private var startPosition = 0
     private var isOverScaledTouchSlop = false
     private val mScaledTouchSlop = 0
     private var mMaxWidth: Int = 0
@@ -87,7 +88,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var scrollPos: Long = 0
     private var isSeeking = false
     private var itemDecoration: SpacesItemDecoration2? = null
-
+    private var myCoroutineJob: Job? = null
     init {
 
     }
@@ -151,7 +152,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
 
-
+        video_frames_recyclerView.adapter = null
+        frameAdapter = null
+        frameAdapter = VideoTrimmerAdapter(this)
+        video_frames_recyclerView.adapter = frameAdapter
 
 
         mPlayView?.setOnClickListener({ playVideoOrPause() })
@@ -307,7 +311,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     private fun videoPrepared(mSourceUri: Uri?) {
-        Log.e("During", mDuration.toString())
+
+        Log.e("mSourceUri", mSourceUri?.path.toString())
 
 
         /*if (!getRestoreState()) {
@@ -317,8 +322,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               seekTo(mRedProgressBarPos.toInt().toLong())
           }*/
 
+        startPosition = 0
 
-        CoroutineScope(Dispatchers.Default).launch {
+        myCoroutineJob = CoroutineScope(Dispatchers.Default).launch {
+
             val mediaMetadataRetriever = MediaMetadataRetriever()
 
             mediaMetadataRetriever.setDataSource(
@@ -327,22 +334,27 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             )// Retrieve media data use microsecond
 
 
-            val interval = (mDuration - 0) / (mThumbsTotalCount - 1)
+            val interval = (mDuration - startPosition) / (mThumbsTotalCount - 1)
             Log.e("mThumbsTotalCount", mThumbsTotalCount.toString())
+            Log.e("mThumbsTotalCount", interval.toString())
             for (i in 0 until mThumbsTotalCount) {
-                val frameTime = startPosition + interval * i
-                var bitmap: Bitmap = mediaMetadataRetriever.getFrameAtTime(
-                    (frameTime * 1000).toLong(),
+                delay(5)
+                val frameTime: Long = startPosition + interval * i.toLong()
+                Log.e("Kkk", "$i")
+                var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
+                    (frameTime * 1000),
                     MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                 )
-                    ?: continue
 
-                bitmap = Bitmap.createScaledBitmap(
-                    bitmap,
-                    VideoTrimmerUtil.THUMB_WIDTH,
-                    VideoTrimmerUtil.THUMB_HEIGHT,
-                    false
-                )
+
+                bitmap = bitmap?.let {
+                    Bitmap.createScaledBitmap(
+                        it,
+                        VideoTrimmerUtil.THUMB_WIDTH,
+                        VideoTrimmerUtil.THUMB_HEIGHT,
+                        false
+                    )
+                }
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
                         frameAdapter?.addBitmaps(bitmap)
@@ -357,6 +369,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
 
 
+
     }
 
 
@@ -367,16 +380,24 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     override fun trimMediaItemListener(mmediaItem: MediaItem) {
         if (mmediaItem.isVideo) {
-            videoPrepared(Uri.parse(mmediaItem.path))
+            if (frameAdapter?.itemCount!! >= 0) {
+                frameAdapter?.clearBitmapsList()
+                videoPrepared(Uri.parse(mmediaItem.path))
+            }
+
+
         }
-        video_frames_recyclerView.adapter = null
-        frameAdapter = null
-        frameAdapter = VideoTrimmerAdapter(this)
-        video_frames_recyclerView.adapter = frameAdapter
 
     }
 
     override fun trimVideoVideoListener(video: VideoView) {
+        if (myCoroutineJob !== null) {
+            myCoroutineJob?.let {
+                if (it.isActive) {
+                    it.cancel()
+                }
+            }
+        }
         this.mVideoView = video
         this.mVideoView.requestFocus()
         this.mVideoView.setOnClickListener {
@@ -392,10 +413,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mDuration = video.duration
         Log.e("Bitmap", "Clear")
         video_frames_recyclerView.clearOnScrollListeners()
-        video_frames_recyclerView.adapter = null
-        frameAdapter = null
-        frameAdapter = VideoTrimmerAdapter(this)
-        video_frames_recyclerView.adapter = frameAdapter
+
 
         initRangeSeekBarView()
         Log.e("Bitmap", "Added")
