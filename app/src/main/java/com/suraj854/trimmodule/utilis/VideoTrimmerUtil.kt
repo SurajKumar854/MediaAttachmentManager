@@ -45,8 +45,7 @@ class VideoTrimmerUtil() {
             this.context = context.applicationContext
             DeviceUtil.initialize(this.context)
             BaseUtils.init(this.context)
-            SCREEN_WIDTH_FULL = DeviceUtil.deviceWidth - 256
-            Log.e("SCREEN_WIDTH_FULL", SCREEN_WIDTH_FULL.toString())
+            SCREEN_WIDTH_FULL = DeviceUtil.deviceWidth
             VIDEO_FRAMES_WIDTH = SCREEN_WIDTH_FULL - RECYCLER_VIEW_PADDING * 2
             RECYCLER_VIEW_PADDING = UnitConverter().dpToPx(35)
             THUMB_HEIGHT = UnitConverter().dpToPx(50)

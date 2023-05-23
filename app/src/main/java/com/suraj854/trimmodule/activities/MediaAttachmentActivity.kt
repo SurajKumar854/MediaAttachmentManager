@@ -53,6 +53,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -268,59 +269,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     fun encodeAttachments() {
         encodeAttachmentsRecursive(0)
-        /*   Log.e("Attachment-Size", AttachmentMediaList.size.toString())
-           for (i in AttachmentMediaList) {
-               if (i.isVideo) {
-                   val source = UriDataSource(this, Uri.parse(i.path));
-                   val start = i.trimFromStart
-                   val trimFromLeft = i.trimFromEnd
-
-                   Log.e("startTrim", " ${start / 1000} ")
-                   Log.e("trimfromleft", " $trimFromLeft ")
-                   val trim =
-                       TrimDataSource(
-                           source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
-                       );
-                   val timeStamp =
-                       SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                   val outputName = "trimmedVideo_$timeStamp.mp4"
-
-
-                   mVideoView.pause()
-                   val folder =
-                       File("/storage/emulated/0/Android" + "/Trimmed/")
-
-                   if (!folder.exists()) {
-                       folder.mkdirs()
-                   }
-
-                   CoroutineScope(Dispatchers.Main).launch {
-                       Transcoder.into("${folder.path}/$outputName")
-
-                           .addDataSource(trim).setListener(object : TranscoderListener {
-
-                               override fun onTranscodeProgress(data: Double) {
-
-                               }
-
-                               override fun onTranscodeCompleted(successCode: Int) {
-                               }
-
-                               override fun onTranscodeCanceled() {
-
-                               }
-
-                               override fun onTranscodeFailed(exception: Throwable) {
-                                   Log.e("Error on Encode", exception.message.toString())
-
-                               }
-
-                           }).transcode()
-
-
-                   }
-               }
-           }*/
 
 
     }
@@ -464,10 +412,25 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mSourceUri
             )// Retrieve media data use microsecond
 
+            if (mDuration <= MAX_SHOOT_DURATION) {
+                mThumbsTotalCount = MAX_COUNT_RANGE
+                mRightProgressPos = mDuration.toLong()
+            } else {
 
+                mThumbsTotalCount =
+                    (((mDuration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
+
+                mRightProgressPos = MAX_SHOOT_DURATION
+
+            }
+            Log.e(
+                "item-decoration",
+                "RECYCLER_VIEW_PADDING-$RECYCLER_VIEW_PADDING  mThumbsTotalCount $mThumbsTotalCount"
+            )
             val interval = (mDuration - startPosition) / (mThumbsTotalCount - 1)
+            Log.e("videoPrepared", "$mThumbsTotalCount")
             for (i in 0 until mThumbsTotalCount) {
-                delay(5)
+
                 val frameTime: Long = startPosition + interval * i.toLong()
 
                 var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
@@ -509,6 +472,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         this.position = position
         this.mediaItem = mediaItem
+        if (mediaItem.isVideo) {
+
+            videoPrepared(Uri.parse(mediaItem.path))
+
+        }
         /*  val isAttachmentExist = AttachmentMediaList.find { it ->
               it.id == position
           }*/
@@ -582,7 +550,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         }
                     }
                 }
-                videoPrepared(Uri.parse(mmediaItem.path))
+                /*     videoPrepared(Uri.parse(mmediaItem.path))*/
 
             }
 
@@ -609,7 +577,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
-        mDurationFlow(video.duration.toLong()).collect {
+        mDurationFlow(video.duration.toLong()).onStart {
+            initRangeSeekBarView(mVideoView.duration)
+        }.collect {
             mDuration = it.toInt()
             initRangeSeekBarView(mDuration)
             Log.e("mDuration", it.toString())
