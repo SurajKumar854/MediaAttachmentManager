@@ -44,7 +44,7 @@ class VideoTrimmerAdapter(private val context: Context) :
 
     @SuppressLint("NotifyDataSetChanged")
     fun clearBitmapsList() {
-        Log.e("Bitmap-Loaded-Previois Size", "Bitmap ${mBitmaps.size}")
+
         mBitmaps.clear()
         count = 0
        this.notifyDataSetChanged()

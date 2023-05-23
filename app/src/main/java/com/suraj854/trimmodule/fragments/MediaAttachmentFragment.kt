@@ -2,7 +2,6 @@ package com.suraj854.trimmodule.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,12 +15,14 @@ import com.suraj854.trimmodule.adapters.MediaAttachmentAdapter
 import com.suraj854.trimmodule.interfaces.MediaItemClickListener
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.interfaces.VideoPreparedListener
+import com.suraj854.trimmodule.interfaces.ViewPager2Listener
 import com.suraj854.trimmodule.models.MediaItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPreparedListener {
+class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPreparedListener,
+    ViewPager2Listener {
     private lateinit var mediaItemViewPager2: ViewPager2
     private lateinit var mediaAttachmentAdapter: MediaAttachmentAdapter
     private var mediaList = mutableListOf<MediaItem>()
@@ -55,16 +56,18 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
                 super.onPageSelected(position)
 
                 CoroutineScope(Dispatchers.Main).launch {
+
                     val mediaItem = mediaList.get(position)
 
                     if (mediaItem.isVideo) {
                         onTrimButtonClick()
                         onMediaItemListener(mediaItem)
 
-
                     } else {
                         onNonVideoItemClick()
                     }
+                    onScrollPosition(position, mediaItem)
+
                 }
 
 
@@ -101,12 +104,15 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
     }
 
     override suspend fun onVideoPrepared(videoView: VideoView) {
-        videoView.start()
-
+        videoView.seekTo(1)
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 
     override suspend fun onMediaItemListener(mediaItem: MediaItem) {
         trimLayoutListener?.trimMediaItemListener(mediaItem)
+    }
+
+    override fun onScrollPosition(position: Int, mediaItem: MediaItem) {
+        trimLayoutListener?.onMediaChange(position,mediaItem)
     }
 }

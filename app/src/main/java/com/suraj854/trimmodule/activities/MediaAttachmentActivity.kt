@@ -2,6 +2,7 @@ package com.suraj854.trimmodule.activities
 
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -34,6 +35,7 @@ import com.suraj854.trimmodule.adapters.VideoTrimmerAdapter
 import com.suraj854.trimmodule.fragments.MediaAttachmentFragment
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.models.MediaItem
+import com.suraj854.trimmodule.models.UploadAttachmentRequest
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.checkCamStoragePer
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.convertSecondsToTime
@@ -90,12 +92,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mThumbsTotalCount = 0
     private var scrollPos: Long = 0
     private var isSeeking = false
+    private lateinit var progressDialog: Dialog
+
+    private var AttachmentMediaList: MutableList<UploadAttachmentRequest> = mutableListOf()
 
     private var myCoroutineJob: Job? = null
+
     init {
 
     }
-
 
 
     private val addMediaChooserResult =
@@ -159,8 +164,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         seekBarLayout = findViewById(R.id.seekBarLayout)
         mRedProgressIcon = findViewById<ImageView>(R.id.positionIcon)
         mStartTimeTxt = findViewById(R.id.startTime)
-        mStartTimeTxt.text = "00:00"
+        progressDialog = Dialog(this)
+        progressDialog.setContentView(R.layout.dialog_loading)
+        progressDialog.setCancelable(false)
         mEndTimeTxt = findViewById(R.id.endTime)
+
         mMaxWidth = VIDEO_FRAMES_WIDTH
         video_frames_recyclerView = findViewById(R.id.video_frames_recyclerView)
         video_frames_recyclerView.layoutManager =
@@ -183,7 +191,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
         mPostBtn.setOnClickListener {
+            CoroutineScope(Dispatchers.Main).launch {
 
+
+                showLoadingDialog("Encoding..")
+                encodeAttachments()
+
+            }
         }
 
         mTrimBtn.setOnClickListener {
@@ -250,6 +264,139 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
 
 
+    }
+
+    fun encodeAttachments() {
+        encodeAttachmentsRecursive(0)
+        /*   Log.e("Attachment-Size", AttachmentMediaList.size.toString())
+           for (i in AttachmentMediaList) {
+               if (i.isVideo) {
+                   val source = UriDataSource(this, Uri.parse(i.path));
+                   val start = i.trimFromStart
+                   val trimFromLeft = i.trimFromEnd
+
+                   Log.e("startTrim", " ${start / 1000} ")
+                   Log.e("trimfromleft", " $trimFromLeft ")
+                   val trim =
+                       TrimDataSource(
+                           source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
+                       );
+                   val timeStamp =
+                       SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                   val outputName = "trimmedVideo_$timeStamp.mp4"
+
+
+                   mVideoView.pause()
+                   val folder =
+                       File("/storage/emulated/0/Android" + "/Trimmed/")
+
+                   if (!folder.exists()) {
+                       folder.mkdirs()
+                   }
+
+                   CoroutineScope(Dispatchers.Main).launch {
+                       Transcoder.into("${folder.path}/$outputName")
+
+                           .addDataSource(trim).setListener(object : TranscoderListener {
+
+                               override fun onTranscodeProgress(data: Double) {
+
+                               }
+
+                               override fun onTranscodeCompleted(successCode: Int) {
+                               }
+
+                               override fun onTranscodeCanceled() {
+
+                               }
+
+                               override fun onTranscodeFailed(exception: Throwable) {
+                                   Log.e("Error on Encode", exception.message.toString())
+
+                               }
+
+                           }).transcode()
+
+
+                   }
+               }
+           }*/
+
+
+    }
+
+    fun encodeAttachmentsRecursive(index: Int) {
+        if (index >= AttachmentMediaList.size) {
+            hideLoadingDialog()
+            return
+        }
+        showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
+
+        val uploadMediaAttachment = AttachmentMediaList.get(index)
+        if (uploadMediaAttachment.isVideo) {
+            val source = UriDataSource(this, Uri.parse(uploadMediaAttachment.path));
+            val start = uploadMediaAttachment.trimFromStart
+            val trimFromLeft = uploadMediaAttachment.trimFromEnd
+
+            val trim =
+                TrimDataSource(
+                    source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
+                );
+            val timeStamp =
+                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val outputName = "trimmedVideo_$timeStamp.mp4"
+
+
+
+            mVideoView.pause()
+            val folder =
+                File("/storage/emulated/0/Android" + "/Trimmed/")
+
+            if (!folder.exists()) {
+                folder.mkdirs()
+            }
+
+
+            Transcoder.into("${folder.path}/$outputName")
+
+                .addDataSource(trim).setListener(object : TranscoderListener {
+
+                    override fun onTranscodeProgress(data: Double) {
+
+                    }
+
+                    override fun onTranscodeCompleted(successCode: Int) {
+
+                        encodeAttachmentsRecursive(index + 1)
+                    }
+
+                    override fun onTranscodeCanceled() {
+                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
+                        hideLoadingDialog()
+                    }
+
+                    override fun onTranscodeFailed(exception: Throwable) {
+                        Log.e("Error on Encode", exception.message.toString())
+                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
+                        hideLoadingDialog()
+                    }
+
+                }).transcode()
+
+
+        } else {
+            encodeAttachmentsRecursive(index + 1)
+        }
+    }
+
+    private fun showLoadingDialog(message: String) {
+        progressDialog.show()
+        val textMessage = progressDialog.findViewById<TextView>(R.id.textMessage)
+        textMessage.text = message // Update the text message as needed
+    }
+
+    private fun hideLoadingDialog() {
+        progressDialog.dismiss()
     }
 
     private fun postMediaAttachments() {
@@ -386,13 +533,75 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
 
 
-
     }
 
 
     override fun hideTrimLayout() {
         trimLL.visibility = View.GONE
 
+    }
+
+    override fun onMediaChange(position: Int, mediaItem: MediaItem) {
+        this.position = position
+        this.mediaItem = mediaItem
+        /*  val isAttachmentExist = AttachmentMediaList.find { it ->
+              it.id == position
+          }*/
+        /* if (isAttachmentExist == null) {
+             AttachmentMediaList.add(
+                 UploadAttachmentRequest(
+                     position,
+                     mediaItem.path,
+                     if (mediaItem.isVideo) true else false,
+                     mLeftProgressPos,
+                     mDuration - mRightProgressPos
+                 )
+             )
+         } else {
+             val attachmentIndex = AttachmentMediaList.indexOf(isAttachmentExist)
+
+
+             AttachmentMediaList.set(
+                 attachmentIndex, AttachmentMediaList.get(attachmentIndex).copy(
+                     isVideo = if (mediaItem.isVideo) true else false,
+                     trimFromStart = mLeftProgressPos,
+                     trimFromEnd = mDuration - mRightProgressPos
+                 )
+             )
+         }*/
+
+        saveAttachmentData()
+    }
+
+    var position: Int = 0
+    fun saveAttachmentData() {
+        val isAttachmentExist = AttachmentMediaList.find { it ->
+            it.id == position
+        }
+        if (isAttachmentExist == null) {
+            AttachmentMediaList.add(
+                UploadAttachmentRequest(
+                    position,
+                    mediaItem.path,
+                    if (mediaItem.isVideo) true else false,
+                    mLeftProgressPos,
+                    mDuration - mRightProgressPos
+                )
+            )
+        } else {
+            val attachmentIndex = AttachmentMediaList.indexOf(isAttachmentExist)
+            Log.e("Updated", "$mLeftProgressPos")
+
+
+            AttachmentMediaList.set(
+                attachmentIndex, AttachmentMediaList.get(attachmentIndex).copy(
+                    isVideo = if (mediaItem.isVideo) true else false,
+                    trimFromStart = mLeftProgressPos,
+                    trimFromEnd = mDuration - mRightProgressPos
+                )
+            )
+            Log.e("AttachmentMediaList-Updated", "${AttachmentMediaList.toString()}")
+        }
     }
 
     override suspend fun trimMediaItemListener(mmediaItem: MediaItem) {
@@ -402,7 +611,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 if (myCoroutineJob !== null) {
                     myCoroutineJob?.let {
                         if (it.isActive) {
-                            Log.e("Courtine", "Cancel")
+
                             it.cancel()
 
                         }
@@ -477,7 +686,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mRangeSeekBarView.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
         mRangeSeekBarView.isNotifyWhileDragging = true
-
+        saveAttachmentData()
 
         mRangeSeekBarView.setOnRangeSeekBarChangeListener(object :
             RangeSeekBarView.OnRangeSeekBarChangeListener {
@@ -519,6 +728,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 }
                 mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                 mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+                saveAttachmentData()
 
             }
 
@@ -676,7 +886,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             seekTo(mLeftProgressPos)
                             mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                             mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
-                            mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+                            saveAttachmentData()
                             mRangeSeekBarView.invalidate()
                         }
                     }
