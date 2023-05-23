@@ -191,7 +191,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             if (!folder.exists()) {
                 folder.mkdirs()
             }
-            Log.e("OutPath", "${folder.path}/$outputName")
+
             CoroutineScope(Dispatchers.Main).launch {
                 Transcoder.into("${folder.path}/$outputName")
 
@@ -316,7 +316,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               seekTo(mRedProgressBarPos.toInt().toLong())
           }*/
 
-        initRangeSeekBarView()
+
         CoroutineScope(Dispatchers.Default).launch {
             val mediaMetadataRetriever = MediaMetadataRetriever()
 
@@ -386,9 +386,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
         }
         mDuration=video.duration
+        Log.e("Bitmap", "Clear")
         frameAdapter.clearBitmapsList()
-
-
+        initRangeSeekBarView()
+        Log.e("Bitmap", "Added")
     }
 
     private fun initRangeSeekBarView() {
