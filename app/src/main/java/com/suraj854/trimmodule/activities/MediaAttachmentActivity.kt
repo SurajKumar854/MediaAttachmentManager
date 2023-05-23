@@ -63,7 +63,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private val fragment: MediaAttachmentFragment = MediaAttachmentFragment()
     private var mPlayView: ImageView? = null
     lateinit var video_frames_recyclerView: RecyclerView
-    lateinit var frameAdapter: VideoTrimmerAdapter
+    var frameAdapter: VideoTrimmerAdapter? = null
     lateinit var seekBarLayout: LinearLayout
     lateinit var mRangeSeekBarView: RangeSeekBarView
     lateinit var mRedProgressIcon: ImageView
@@ -86,10 +86,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mThumbsTotalCount = 0
     private var scrollPos: Long = 0
     private var isSeeking = false
+    private var itemDecoration: SpacesItemDecoration2? = null
 
     init {
 
     }
+
 
     private val addMediaChooserResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -148,10 +150,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         video_frames_recyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
-        frameAdapter = VideoTrimmerAdapter(this)
 
 
-        video_frames_recyclerView.adapter = frameAdapter
+
 
         mPlayView?.setOnClickListener({ playVideoOrPause() })
 
@@ -344,7 +345,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 )
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
-                        frameAdapter.addBitmaps(bitmap)
+                        frameAdapter?.addBitmaps(bitmap)
                     }
 
 
@@ -360,7 +361,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
     override fun hideTrimLayout() {
-
         trimLL.visibility = View.GONE
 
     }
@@ -369,6 +369,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         if (mmediaItem.isVideo) {
             videoPrepared(Uri.parse(mmediaItem.path))
         }
+        video_frames_recyclerView.adapter = null
+        frameAdapter = null
+        frameAdapter = VideoTrimmerAdapter(this)
+        video_frames_recyclerView.adapter = frameAdapter
 
     }
 
@@ -385,9 +389,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
-        mDuration=video.duration
+        mDuration = video.duration
         Log.e("Bitmap", "Clear")
-        frameAdapter.clearBitmapsList()
+        video_frames_recyclerView.clearOnScrollListeners()
+        video_frames_recyclerView.adapter = null
+        frameAdapter = null
+        frameAdapter = VideoTrimmerAdapter(this)
+        video_frames_recyclerView.adapter = frameAdapter
+
         initRangeSeekBarView()
         Log.e("Bitmap", "Added")
     }
@@ -400,20 +409,21 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mRightProgressPos = mDuration.toLong()
         } else {
 
-            mThumbsTotalCount =
-                (((mDuration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
+            mThumbsTotalCount = (((mDuration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
             mRightProgressPos = MAX_SHOOT_DURATION
 
         }
-        video_frames_recyclerView.addItemDecoration(
-            SpacesItemDecoration2(
-                RECYCLER_VIEW_PADDING,
-                mThumbsTotalCount
-            )
+        Log.e(
+            "item-decoration",
+            "RECYCLER_VIEW_PADDING-$RECYCLER_VIEW_PADDING  mThumbsTotalCount $mThumbsTotalCount"
         )
+
+
+
+
         mRangeSeekBarView =
-            RangeSeekBarView(applicationContext, mLeftProgressPos, mRightProgressPos)
+            RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView.selectedMaxValue = mRightProgressPos
         mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
@@ -492,12 +502,34 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private val mAnimationHandler = Handler()
     private fun playingRedProgressAnimation() {
 
-            pauseRedProgressAnimation()
-            playingAnimation()
-            mAnimationHandler.post(mAnimationRunnable)
+        pauseRedProgressAnimation()
+        playingAnimation()
+        mAnimationHandler.post(mAnimationRunnable)
 
     }
 
+    private fun addItemDecoration(thumbnailsCountValue: Int) {
+        // Check if itemDecoration already exists and remove it
+        if (itemDecoration != null) {
+            Log.e("Removed", "removeItemDecoration")
+            video_frames_recyclerView.removeItemDecoration(itemDecoration!!)
+        } else {
+            // Create a new instance of the item decoration
+            itemDecoration = SpacesItemDecoration2(RECYCLER_VIEW_PADDING, thumbnailsCountValue)
+
+            // Add the item decoration to the RecyclerView
+            video_frames_recyclerView.addItemDecoration(itemDecoration!!)
+        }
+
+
+    }
+
+    private fun removeItemDecoration() {
+        if (itemDecoration != null) {
+            video_frames_recyclerView.removeItemDecoration(itemDecoration!!)
+            itemDecoration = null
+        }
+    }
 
     private val mAnimationRunnable = Runnable { updateVideoProgress() }
     private fun calcScrollXDistance(): Int {
@@ -613,13 +645,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 }
 
-class SpacesItemDecoration2(private val space: Int, private val thumbnailsCount: Int) :
+class SpacesItemDecoration2(private val space: Int = 0, private val thumbnailsCount: Int = 0) :
     ItemDecoration() {
     override fun getItemOffsets(
-        outRect: Rect,
-        view: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
+        outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
     ) {
         val position = parent.getChildAdapterPosition(view)
         if (position == 0) {

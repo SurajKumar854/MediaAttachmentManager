@@ -101,6 +101,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
 
     override fun onVideoPrepared(videoView: VideoView) {
         videoView.start()
+
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 

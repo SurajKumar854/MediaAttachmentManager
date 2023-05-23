@@ -38,7 +38,9 @@ class VideoTrimmerAdapter(private val context: Context) :
 
     fun addBitmaps(bitmap: Bitmap) {
         mBitmaps.add(bitmap)
+        Log.e("Bitmap-Loaded addBitmaps-Previois Size", "Bitmap ${mBitmaps.size}")
         Log.e("Bitmap-Loaded", "Bitmap ${count++}")
+        Log.e("Surajssss","Bitmap")
         notifyDataSetChanged()
     }
 
