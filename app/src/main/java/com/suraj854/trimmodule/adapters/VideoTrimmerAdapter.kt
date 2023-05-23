@@ -47,7 +47,7 @@ class VideoTrimmerAdapter(private val context: Context) :
         Log.e("Bitmap-Loaded-Previois Size", "Bitmap ${mBitmaps.size}")
         mBitmaps.clear()
         count = 0
-        notifyDataSetChanged()
+       this.notifyDataSetChanged()
     }
 
     class TrimmerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

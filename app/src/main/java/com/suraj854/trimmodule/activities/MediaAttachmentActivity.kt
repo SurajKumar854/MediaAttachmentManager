@@ -1,7 +1,6 @@
 package com.suraj854.trimmodule.activities
 
 import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -109,6 +108,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         }
 
                         val mediaType = uri?.uri?.let { getMediaType(it) }
+                        Log.e("Suraj", uri?.uri.toString())
                         if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                             // Process as an image
 
@@ -127,7 +127,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
 
-    @SuppressLint("SuspiciousIndentation")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_attachment)
@@ -264,8 +264,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     lateinit var mediaItem: MediaItem
-    override fun showTrimLayout(mediaItem: MediaItem, videoView: VideoView) {
-        this.mediaItem = mediaItem
+    override fun showTrimLayout() {
 
 
         /*
@@ -319,7 +318,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         initRangeSeekBarView()
         CoroutineScope(Dispatchers.Default).launch {
-            frameAdapter.clearBitmapsList()
             val mediaMetadataRetriever = MediaMetadataRetriever()
 
             mediaMetadataRetriever.setDataSource(
@@ -374,10 +372,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
-    override fun trimVideoVideoListener(videoView: VideoView) {
-        this.mVideoView = videoView
+    override fun trimVideoVideoListener(video: VideoView) {
+        this.mVideoView = video
         this.mVideoView.requestFocus()
-        videoView.setOnClickListener {
+        this.mVideoView.setOnClickListener {
 
             if (mVideoView.isPlaying) {
                 mVideoView.pause()
@@ -387,8 +385,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
-        mDuration = videoView.duration
-        Log.e("mediaItem", mediaItem.path)
+        mDuration=video.duration
+        frameAdapter.clearBitmapsList()
+
 
     }
 

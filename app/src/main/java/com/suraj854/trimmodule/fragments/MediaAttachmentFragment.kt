@@ -56,18 +56,12 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
 
                 CoroutineScope(Dispatchers.Main).launch {
                     val mediaItem = mediaList.get(position)
-                    onMediaItemListener(mediaItem)
+
                     if (mediaItem.isVideo) {
-                        Log.e("Second", "Suraj")
-                        mediaItemViewPager2.getVideoViewAtPosition(position)?.let {vv->
-                            onTrimButtonClick(
-                                mediaItem,
-                                vv
-                            )
+                        onTrimButtonClick()
+                        onMediaItemListener(mediaItem)
 
 
-
-                        }
                     } else {
                         onNonVideoItemClick()
                     }
@@ -86,9 +80,9 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
         trimLayoutListener = listener
     }
 
-    override fun onTrimButtonClick(mediaItem: MediaItem, videoViewAtPosition: VideoView) {
+    override fun onTrimButtonClick() {
 
-        trimLayoutListener?.showTrimLayout(mediaItem, videoViewAtPosition)
+        trimLayoutListener?.showTrimLayout()
 
     }
 
