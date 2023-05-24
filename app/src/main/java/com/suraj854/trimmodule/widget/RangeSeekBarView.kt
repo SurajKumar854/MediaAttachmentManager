@@ -212,7 +212,7 @@ class RangeSeekBarView : View {
         drawThumb(normalizedToScreen(thumbNormalizedMaxValue), false, canvas, false)
 
 
-        /*   drawVideoTrimTimeText(canvas)*/
+         drawVideoTrimTimeText(canvas)
     }
 
     var isPressedThumb = true
@@ -234,13 +234,13 @@ class RangeSeekBarView : View {
 
         canvas.drawText(
             leftThumbsTime,
-            normalizedToScreen(normalizedMinValue),
+            normalizedToScreen(thumbNormalizedMinValue),
             TextPositionY.toFloat(),
             mVideoTrimTimePaintL
         )
         canvas.drawText(
             rightThumbsTime,
-            normalizedToScreen(normalizedMaxValue),
+            normalizedToScreen(thumbNormalizedMaxValue),
             TextPositionY.toFloat(),
             mVideoTrimTimePaintR
         )
@@ -570,6 +570,7 @@ class RangeSeekBarView : View {
 
         mStartPosition = start / 1000
         mEndPosition = end / 1000
+        Log.e("setStartEndTime",end.toString())
     }
 
     fun setNormalizedMinValue(value: Double) {

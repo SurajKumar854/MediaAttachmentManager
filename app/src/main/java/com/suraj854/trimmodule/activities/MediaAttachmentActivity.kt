@@ -401,7 +401,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mThumbsTotalCount =
                     (((mediaItem.duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
-                mRightProgressPos = MAX_SHOOT_DURATION
+              //  mRightProgressPos = MAX_SHOOT_DURATION
 
             }
             val interval = (mediaItem.duration - startPosition) / (mThumbsTotalCount - 1)
@@ -559,26 +559,30 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     lateinit var mRangeSeekBarView: RangeSeekBarView
     private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
+        Log.e(
+            "seekBarTime",
+            "left->?${mediaItem.leftProgress} right->left->?${mediaItem.rightProgress}"
+        )
 
         seekBarLayout.removeAllViews()
-        mLeftProgressPos = 0
+      /*  mLeftProgressPos = 0*/
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            mRightProgressPos = duration
+          //  mRightProgressPos = duration
+            mRightProgressPos=mediaItem.rightProgress
 
         } else {
 
             mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
-            mRightProgressPos = MAX_SHOOT_DURATION
+           // mRightProgressPos = MAX_SHOOT_DURATION
 
 
         }
+        mLeftProgressPos=mediaItem.leftProgress
 
-
-
-
-        mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
+        mRightProgressPos=mediaItem.rightProgress
+        mRangeSeekBarView = RangeSeekBarView(this, mediaItem.leftProgress, mediaItem.rightProgress)
 
         var right = 100f
 
@@ -591,8 +595,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         /*  mRangeSeekBarView?.selectedMinValue = mLeftProgressPos
           mRangeSeekBarView?.selectedMaxValue = mRightProgressPos*/
 
-        mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
-        mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+
+        mRangeSeekBarView.setStartEndTime(mLeftProgressPos,mRightProgressPos)
         mRangeSeekBarView?.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
         mRangeSeekBarView?.isNotifyWhileDragging = true
@@ -612,8 +616,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 pressedThumb: RangeSeekBarView.Thumb?
             ) {
 
-
-                mEndTimeTxt.x = maxValue.toFloat() / 10
                 mLeftProgressPos = minValue + scrollPos
                 mRedProgressBarPos = mLeftProgressPos
                 mRightProgressPos = maxValue + scrollPos
@@ -626,6 +628,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             (if (pressedThumb === RangeSeekBarView.Thumb.MIN) mLeftProgressPos else mRightProgressPos).toInt()
                                 .toLong()
                         )
+                        fragment.updateThumbPositionTimeValues(
+                            position,
+                            mLeftProgressPos,
+                            mRightProgressPos
+                        )
+
                     }
 
                     MotionEvent.ACTION_UP -> {
@@ -639,20 +647,21 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     }
                 }
 
-                mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
-                mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+
+
                 fragment.updateThumbPositionTimeValues(
                     position,
                     mLeftProgressPos,
                     mRightProgressPos
                 )
+                mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
                 //  saveAttachmentData()
 
             }
 
             override fun onNormaliseValuesChanged(min: Float, max: Float) {
-                mStartTimeTxt.x = min
-                mEndTimeTxt.x = max
+                /*mStartTimeTxt.x = min
+                mEndTimeTxt.x = max*/
                 /* thumbLeftPosition = min
                  thumbRightPosition = max*/
                 // Log.e("updated", "$thumbLeftPosition, $thumbRightPosition")
@@ -670,7 +679,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 Log.e("updated-recent", "$isPressed, $thumbRightPosition")
                 thumbLeftPosition = min
                 thumbRightPosition = max
-
                 fragment.updateThumbPositions(
                     position,
                     min,
@@ -821,6 +829,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
 
                         mRedProgressBarPos = mLeftProgressPos
+                        fragment.updateThumbPositionTimeValues(
+                            position,
+                            mLeftProgressPos,
+                            mRightProgressPos
+                        )
                     } else {
                         isSeeking = true
                         scrollPos =
@@ -837,8 +850,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             }
                             mRedProgressIcon.setVisibility(View.GONE)
                             seekTo(mLeftProgressPos)
-                            mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
-                            mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
+                            fragment.updateThumbPositionTimeValues(
+                                position,
+                                mLeftProgressPos,
+                                mRightProgressPos
+                            )
+
+                            mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
                             saveAttachmentData()
                             mRangeSeekBarView.invalidate()
                         }
@@ -854,6 +872,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         this.mVideoView.seekTo(msec.toInt())
 
     }
+    var currentSelectedMediaPage = 0
 
 
 }
