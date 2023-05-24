@@ -4,8 +4,8 @@ data class MediaItem(
     val path: String,
     val duration: Long = 0,
     val isVideo: Boolean,
-    val trimFromStart: Long=0,
-    val trimFromEnd: Long=0,
+    var trimFromStart: Long=0,
+    var trimFromEnd: Long=0,
     var lastLeftThumbPosition: Float = 0f,
     var lastRightThumbPosition: Float = 1f
 )
