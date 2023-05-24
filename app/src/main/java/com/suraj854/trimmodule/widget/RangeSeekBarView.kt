@@ -168,8 +168,8 @@ class RangeSeekBarView : View {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        rangeL = thumbLeftPosition
-        rangeR = thumbRigtPosition
+        rangeL = normalizedToScreen(thumbNormalizedMinValue)
+        rangeR = normalizedToScreen(thumbNormalizedMaxValue)
 
 
         val bg_middle_left = 0f
@@ -192,25 +192,24 @@ class RangeSeekBarView : View {
             height.toFloat(),
             rectPaint!!
         )
-        Log.e("drawing...", "$thumbLeftPosition/$thumbRigtPosition")
+
         if (mIsDragging) {
             mRangeSeekBarChangeListener?.onDragNormaliseValuesChanged(
-                false, normalizedToScreen(normalizedMinValue),
-                normalizedToScreen(normalizedMaxValue)
+                false, thumbNormalizedMinValue,
+                thumbNormalizedMaxValue
             )
         }
-
-        mRangeSeekBarChangeListener?.onNormaliseValuesChanged(
-            normalizedToScreen(normalizedMinValue),
-            normalizedToScreen(normalizedMaxValue)
-        )
-
-
+        /*
+                mRangeSeekBarChangeListener?.onNormaliseValuesChanged(
+                    normalizedToScreen(normalizedMinValue),
+                    normalizedToScreen(normalizedMaxValue)
+                )*/
 
 
-        drawThumb(thumbLeftPosition, false, canvas, true)
-        drawThumb(thumbRigtPosition, false, canvas, false)
-        Log.e("readTrimmer-final", "${thumbLeftPosition}/${thumbRigtPosition}")
+        Log.e("readTrimmerssss-finally", "${thumbNormalizedMaxValue}")
+
+        drawThumb(normalizedToScreen(thumbNormalizedMinValue), false, canvas, true)
+        drawThumb(normalizedToScreen(thumbNormalizedMaxValue), false, canvas, false)
 
 
         /*   drawVideoTrimTimeText(canvas)*/
@@ -402,9 +401,13 @@ class RangeSeekBarView : View {
         if (Thumb.MIN == pressedThumb) {
             // screenToNormalized(x)-->得到规格化的0-1的值
             setNormalizedMinValue(screenToNormalized(x, 0))
+            Log.e("thumbLeftPosition", "->Normal->$normalizedMinValue")
+            // thumbLeftPosition = normalizedToScreen(normalizedMinValue)
+            Log.e("thumbLeftPosition", "$thumbLeftPosition->Normal->$normalizedMinValue")
             /*  normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
-           */   thumbLeftPosition = normalizedToScreen(normalizedMinValue)
-            postInvalidate()
+               normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
+           */ /*  normal = normalizedToScreen(normalizedMinValue)*/
+
 
         } else if (Thumb.MAX == pressedThumb) {
             setNormalizedMaxValue(screenToNormalized(x, 1))
@@ -423,8 +426,8 @@ class RangeSeekBarView : View {
         } else {
             isMin = false
             var current_width = screenCoord.toDouble()
-            val rangeL = normalizedToScreen(normalizedMinValue)
-            val rangeR = normalizedToScreen(normalizedMaxValue)
+            val rangeL = normalizedToScreen(thumbNormalizedMinValue)
+            val rangeR = normalizedToScreen(thumbNormalizedMaxValue)
             val min =
                 mMinShootTime / (absoluteMaxValuePrim - absoluteMinValuePrim) * (width - thumbWidth * 2)
             min_width = if (absoluteMaxValuePrim > 5 * 60 * 1000) { //大于5分钟的精确小数四位
@@ -434,8 +437,8 @@ class RangeSeekBarView : View {
                 Math.round(min + 0.5).toDouble()
             }
             if (position == 0) {
-                if (isInThumbRangeLeft(screenCoord, normalizedMinValue, 0.5)) {
-                    return normalizedMinValue
+                if (isInThumbRangeLeft(screenCoord, thumbNormalizedMinValue, 0.5)) {
+                    return thumbNormalizedMinValue
                 }
                 val rightPosition: Float =
                     if (getWidth() - rangeR >= 0) getWidth() - rangeR else 0F
@@ -457,8 +460,8 @@ class RangeSeekBarView : View {
                 val result = (current_width - padding) / (width - 2 * padding)
                 Math.min(1.0, Math.max(0.0, result)) // 保证该该值为0-1之间，但是什么时候这个判断有用呢？
             } else {
-                if (isInThumbRange(screenCoord, normalizedMaxValue, 0.5)) {
-                    return normalizedMaxValue
+                if (isInThumbRange(screenCoord, thumbNormalizedMaxValue, 0.5)) {
+                    return thumbNormalizedMaxValue
                 }
                 val right_length = valueLength - (rangeL + min_width)
                 if (current_width > rangeR) {
@@ -478,7 +481,7 @@ class RangeSeekBarView : View {
                 }
                 var resultTime = (paddingRight - padding) / (width - 2 * thumbWidth)
                 resultTime = 1 - resultTime
-                normalizedMaxValueTime = Math.min(1.0, Math.max(0.0, resultTime))
+                thumbNormalizedMaxValue = Math.min(1.0, Math.max(0.0, resultTime))
                 val result = (current_width - padding) / (width - 2 * padding)
                 Math.min(1.0, Math.max(0.0, result)) // 保证该该值为0-1之间，但是什么时候这个判断有用呢？
             }
@@ -496,9 +499,9 @@ class RangeSeekBarView : View {
      */
     private fun evalPressedThumb(touchX: Float): Thumb? {
         var result: Thumb? = null
-        Log.e("normalizedMinValue",normalizedMinValue.toString())
-        val minThumbPressed = isInThumbRange(touchX, normalizedMinValue, 2.0) // 触摸点是否在最小值图片范围内
-        val maxThumbPressed = isInThumbRange(touchX, normalizedMaxValue, 2.0)
+        Log.e("normalizedMinValue", normalizedMinValue.toString())
+        val minThumbPressed = isInThumbRange(touchX, thumbNormalizedMinValue, 2.0) // 触摸点是否在最小值图片范围内
+        val maxThumbPressed = isInThumbRange(touchX, thumbNormalizedMaxValue, 2.0)
         if (minThumbPressed && maxThumbPressed) {
             // 如果两个thumbs重叠在一起，无法判断拖动哪个，做以下处理
             // 触摸点在屏幕右侧，则判断为touch到了最小值thumb，反之判断为touch到了最大值thumb
@@ -571,11 +574,20 @@ class RangeSeekBarView : View {
 
     fun setNormalizedMinValue(value: Double) {
         normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
+        thumbNormalizedMinValue =
+            Math.max(0.0, Math.min(1.0, Math.min(value, thumbNormalizedMaxValue)))
+
+        Log.e("thumbNormalizedMinValue", thumbNormalizedMinValue.toString())
         invalidate() // 重新绘制此view
     }
 
+    var thumbNormalizedMinValue: Double = 0.0
+    var thumbNormalizedMaxValue: Double = 1.0
     fun setNormalizedMaxValue(value: Double) {
         normalizedMaxValue = Math.max(0.0, Math.min(1.0, Math.max(value, normalizedMinValue)))
+        thumbNormalizedMaxValue =
+            Math.max(0.0, Math.min(1.0, Math.max(value, thumbNormalizedMinValue)))
+        Log.e("thumbNormalizedMaxValue", thumbNormalizedMaxValue.toString())
         invalidate() // 重新绘制此view
     }
 
@@ -583,7 +595,7 @@ class RangeSeekBarView : View {
         get() = normalizedToValue(normalizedMinValueTime)
         set(value) {
             if (0.0 == absoluteMaxValuePrim - absoluteMinValuePrim) {
-                Log.e("absoluteMaxValuePrim","absoluteMaxValuePrim")
+                Log.e("absoluteMaxValuePrim", "absoluteMaxValuePrim")
                 setNormalizedMinValue(0.0)
             } else {
                 Log.e("absoluteMaxValuePrim","setNormalizedMinValue")
@@ -597,16 +609,13 @@ class RangeSeekBarView : View {
             shouldRedrawImmediately = value
         }
     var count = 1
-    fun readTrimmer(left: Float, right: Float) {
-        Log.e("surajss", " ${0}")
+    fun readTrimmer(left: Double, right: Double) {
 
-        var n = count++
-        thumbRigtPosition = right
-        thumbLeftPosition = left
+
+        thumbNormalizedMaxValue = right
+        thumbNormalizedMinValue = left
+        thumbLeftPosition = 500f
         postInvalidate()
-        Log.e("readTrimmer-right", "${thumbRigtPosition}")
-        Log.e("readTrimmer-left", "${thumbLeftPosition}")
-
 
 
     }
@@ -619,7 +628,7 @@ class RangeSeekBarView : View {
         }
 
     var selectedMaxValue: Long
-        get() = normalizedToValue(normalizedMaxValueTime)
+        get() = normalizedToValue(thumbNormalizedMaxValue)
         set(value) {
             if (0.0 == absoluteMaxValuePrim - absoluteMinValuePrim) {
                 setNormalizedMaxValue(1.0)
@@ -673,8 +682,8 @@ class RangeSeekBarView : View {
 
         fun onDragNormaliseValuesChanged(
             isPressed: Boolean,
-            min: Float,
-            max: Float
+            min: Double,
+            max: Double
         )
     }
 

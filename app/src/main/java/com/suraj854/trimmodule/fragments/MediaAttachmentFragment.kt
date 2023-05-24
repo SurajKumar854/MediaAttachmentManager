@@ -108,24 +108,31 @@ var currentMediaPage = 0
 
     fun updateThumbPositions(
         position: Int,
-        left: Float,
-        right: Float,
+        left: Double,
+        right: Double,
         leftProgress: Long,
-        rightProgress: Long,
-        trimmedProgress: Long
+        rightProgress: Long
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val item = mediaList.get(position)
-            item.lastLeftThumbPosition = left
-            item.lastRightThumbPosition = right
-            item.leftProgress = leftProgress
-            item.rightProgress = rightProgress
-            item.trimFromEnd = trimmedProgress
-        }
-
-
+        val item = mediaList.get(position)
+        item.lastLeftThumbPosition = left
+        item.lastRightThumbPosition = right
+        item.leftProgress = leftProgress
+        item.rightProgress = rightProgress
 
         Log.e("readTrimmer-updateThumbPositions", "left ${left}  right ${right} ")
+
+
+    }
+    fun updateThumbPositionTimeValues(
+        position: Int,
+        leftProgress: Long,
+        rightProgress: Long
+    ) {
+        val item = mediaList.get(position)
+        item.leftProgress = leftProgress
+        item.rightProgress = rightProgress
+
+
 
 
     }
