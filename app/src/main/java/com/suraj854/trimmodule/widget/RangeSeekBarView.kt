@@ -20,6 +20,7 @@ import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.widget.DateUtil
 import com.suraj854.videotrimmerview.utilis.UnitConverter
 import com.suraj854.videotrimmerview.widget.RangeSeekBarView
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import java.text.DecimalFormat
 
@@ -84,6 +85,26 @@ class RangeSeekBarView : View {
         init()
     }
 
+    private var shouldRedrawImmediately = false
+
+    val getNormalMin = MutableStateFlow<Float?>(null)
+    fun resetRangeSeek() {
+        shouldRedrawImmediately = true
+        /*CoroutineScope(Dispatchers.Main).launch {
+            getNormalMin.collect {
+                Log.e(
+                    "resetRangeSeek",
+                    "normalizedToScreen(normalizedMinValue)-> $it "
+                )
+                requestLayout()
+                invalidate()
+                postInvalidate()
+            }
+        }*/
+
+
+    }
+
     private fun init() {
         mScaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
         thumbImageLeft = BitmapFactory.decodeResource(resources, R.drawable.ic_video_thumb_handle)
@@ -137,14 +158,20 @@ class RangeSeekBarView : View {
         emit(normalizedMinValue.toLong())
     }
 
+    var rangeL: Float = 0f
+    var rangeR: Float = 0f
+
+    var thumbLeftPosition = 0f
+    var thumbRigtPosition = 0f
 
     @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+
+        rangeL = normalizedToScreen(normalizedMinValue)
+        rangeR = normalizedToScreen(normalizedMaxValue)
         val bg_middle_left = 0f
         val bg_middle_right = (width - paddingRight).toFloat()
-        val rangeL = normalizedToScreen(normalizedMinValue)
-        val rangeR = normalizedToScreen(normalizedMaxValue)
         val leftRect = Rect(bg_middle_left.toInt(), height, rangeL.toInt(), 0)
         val rightRect = Rect(rangeR.toInt(), height, bg_middle_right.toInt(), 0)
         canvas.drawRect(leftRect, mShadow)
@@ -163,12 +190,16 @@ class RangeSeekBarView : View {
             height.toFloat(),
             rectPaint!!
         )
-        getNormalisedValues()
-        mRangeSeekBarChangeListener?.onNormaliseValuesChanged(normalizedToScreen(normalizedMinValue),normalizedToScreen(normalizedMaxValue))
 
-        drawThumb(normalizedToScreen(normalizedMinValue), false, canvas, true)
-        drawThumb(normalizedToScreen(normalizedMaxValue), false, canvas, false)
-     /*   drawVideoTrimTimeText(canvas)*/
+        mRangeSeekBarChangeListener?.onNormaliseValuesChanged(
+            normalizedToScreen(normalizedMinValue),
+            normalizedToScreen(normalizedMaxValue)
+        )
+
+
+        drawThumb(thumbLeftPosition, false, canvas, true)
+        drawThumb(thumbRigtPosition, false, canvas, false)
+        /*   drawVideoTrimTimeText(canvas)*/
     }
 
     private fun drawThumb(screenCoord: Float, pressed: Boolean, canvas: Canvas, isLeft: Boolean) {
@@ -225,6 +256,7 @@ class RangeSeekBarView : View {
                 isPressed = true // 设置该控件被按下了
                 onStartTrackingTouch() // 置mIsDragging为true，开始追踪touch事件
                 trackTouchEvent(event)
+
                 attemptClaimDrag()
                 if (mRangeSeekBarChangeListener != null) {
                     mRangeSeekBarChangeListener!!.onRangeSeekBarValuesChanged(
@@ -236,8 +268,10 @@ class RangeSeekBarView : View {
 
             MotionEvent.ACTION_MOVE -> if (pressedThumb != null) {
                 if (mIsDragging) {
+
                     trackTouchEvent(event)
                 } else {
+                    Log.e("touching...", "sssss")
                     // Scroll to follow the motion event
                     pointerIndex = event.findPointerIndex(mActivePointerId)
                     val x = event.getX(pointerIndex) // 手指在控件上点的X坐标
@@ -469,7 +503,7 @@ class RangeSeekBarView : View {
         mMinShootTime = min_cut_time
     }
 
-    private fun normalizedToScreen(normalizedCoord: Double): Float {
+    fun normalizedToScreen(normalizedCoord: Double): Float {
         return (paddingLeft + normalizedCoord * (width - paddingLeft - paddingRight)).toFloat()
     }
 
@@ -503,6 +537,25 @@ class RangeSeekBarView : View {
             } else {
                 setNormalizedMinValue(valueToNormalized(value))
             }
+        }
+    var resetSelectedMinValue: Boolean
+        get() = true
+        set(value) {
+            Log.e("calling", "resetSelectedMinValue$")
+            shouldRedrawImmediately = value
+        }
+
+    var setThumbLeftPosition: Float
+        get() = thumbLeftPosition
+        set(value) {
+
+            thumbLeftPosition = value
+        }
+    var setThumbRightPosition: Float
+        get() = thumbRigtPosition
+        set(value) {
+
+            thumbRigtPosition = value
         }
     var selectedNormalizedMinValue: Float
         get() = normalizedToScreen(normalizedMinValue)

@@ -2,6 +2,7 @@ package com.suraj854.trimmodule.fragments
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -54,6 +55,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
         mediaItemViewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
+                Log.e("registerOnPageChangeCallback-onPageSelected","$position")
 
                 CoroutineScope(Dispatchers.Main).launch {
 
@@ -66,8 +68,8 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
                     } else {
                         onNonVideoItemClick()
                     }
-                    onScrollPosition(position, mediaItem)
 
+                    onScrollPosition(position, mediaItem)
                 }
 
 

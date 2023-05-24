@@ -5,6 +5,8 @@ data class UploadAttachmentRequest(
     val path: String,
     val isVideo: Boolean,
     val trimFromStart: Long,
-    val trimFromEnd: Long
+    val trimFromEnd: Long,
+    val lastLeftThumbPosition: Float = 0f,
+    val lastRightThumbPosition: Float = 0f
 ) {
 }

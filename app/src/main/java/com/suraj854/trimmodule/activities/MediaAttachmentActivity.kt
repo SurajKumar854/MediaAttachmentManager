@@ -50,7 +50,6 @@ import com.suraj854.videotrimmerview.widget.RangeSeekBarView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
@@ -70,7 +69,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var video_frames_recyclerView: RecyclerView
     var frameAdapter: VideoTrimmerAdapter? = null
     lateinit var seekBarLayout: LinearLayout
-    lateinit var mRangeSeekBarView: RangeSeekBarView
+    var mRangeSeekBarView: RangeSeekBarView? = null
     lateinit var mRedProgressIcon: ImageView
     lateinit var mVideoView: VideoView
     lateinit var mPostBtn: Button
@@ -192,77 +191,23 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
         mPostBtn.setOnClickListener {
-            CoroutineScope(Dispatchers.Main).launch {
+            if (AttachmentMediaList.isEmpty()) {
+                Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
+            } else {
+                CoroutineScope(Dispatchers.Main).launch {
 
 
-                showLoadingDialog("Encoding..")
-                encodeAttachments()
+                    showLoadingDialog("Encoding..")
+                    encodeAttachments()
 
+                }
             }
-        }
 
+        }
         mTrimBtn.setOnClickListener {
-            val source = UriDataSource(this, Uri.parse(mediaItem.path));
-            val start = mLeftProgressPos
-            val end = mRightProgressPos
-            val trimFromLeft = mDuration - end
-
-            Log.e("startTrim", " ${mLeftProgressPos / 1000} ")
-            Log.e("end", " ${mRightProgressPos / 1000} ")
-            Log.e("mDuration", " $mDuration ")
-            Log.e("trimfromleft", " $trimFromLeft ")
-            val trim =
-                TrimDataSource(
-                    source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
-                );
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val outputName = "trimmedVideo_$timeStamp.mp4"
-
-
-            mVideoView.pause()
-            val folder =
-                File("/storage/emulated/0/Android" + "/Trimmed/")
-
-            if (!folder.exists()) {
-                folder.mkdirs()
-            }
-
-            CoroutineScope(Dispatchers.Main).launch {
-                Transcoder.into("${folder.path}/$outputName")
-
-                    .addDataSource(trim).setListener(object : TranscoderListener {
-
-                        override fun onTranscodeProgress(data: Double) {
-                            val progressPercentage = (data * 100).toInt()
-
-                            CoroutineScope(Dispatchers.Main).launch {
-                                mTrimBtn.text = "$progressPercentage %"
-                            }
-                        }
-
-                        override fun onTranscodeCompleted(successCode: Int) {
-                            mTrimBtn.text = "Done"
-
-                            CoroutineScope(Dispatchers.Main).launch {
-                                delay(2000)
-                                mTrimBtn.text = "Trim"
-                            }
-                        }
-
-                        override fun onTranscodeCanceled() {
-
-                        }
-
-                        override fun onTranscodeFailed(exception: Throwable) {
-                            Log.e("Error on Encode", exception.message.toString())
-
-                        }
-
-                    }).transcode()
-
-
-            }
+            mRangeSeekBarView?.resetSelectedMinValue = true
         }
+
 
 
     }
@@ -393,7 +338,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     private fun videoPrepared(mSourceUri: Uri?) {
 
-        Log.e("mSourceUri", mSourceUri?.path.toString())
 
 
         /*if (!getRestoreState()) {
@@ -425,10 +369,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mRightProgressPos = MAX_SHOOT_DURATION
 
             }
-            Log.e(
-                "item-decoration",
-                "RECYCLER_VIEW_PADDING-$RECYCLER_VIEW_PADDING  mThumbsTotalCount $mThumbsTotalCount"
-            )
             val interval = (mDuration - startPosition) / (mThumbsTotalCount - 1)
             Log.e("videoPrepared", "$mThumbsTotalCount")
             for (i in 0 until mThumbsTotalCount) {
@@ -474,41 +414,30 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         this.position = position
         this.mediaItem = mediaItem
+
         if (mediaItem.isVideo) {
 
             videoPrepared(Uri.parse(mediaItem.path))
 
+            saveAttachmentData()
+
+            if (mRangeSeekBarView != null) {
+
+
+                mRangeSeekBarView?.setThumbLeftPosition =
+                    AttachmentMediaList.get(position).lastLeftThumbPosition
+
+                mRangeSeekBarView?.setThumbRightPosition =
+                    AttachmentMediaList.get(position).lastRightThumbPosition
+
+            }
         }
-        /*  val isAttachmentExist = AttachmentMediaList.find { it ->
-              it.id == position
-          }*/
-        /* if (isAttachmentExist == null) {
-             AttachmentMediaList.add(
-                 UploadAttachmentRequest(
-                     position,
-                     mediaItem.path,
-                     if (mediaItem.isVideo) true else false,
-                     mLeftProgressPos,
-                     mDuration - mRightProgressPos
-                 )
-             )
-         } else {
-             val attachmentIndex = AttachmentMediaList.indexOf(isAttachmentExist)
 
-
-             AttachmentMediaList.set(
-                 attachmentIndex, AttachmentMediaList.get(attachmentIndex).copy(
-                     isVideo = if (mediaItem.isVideo) true else false,
-                     trimFromStart = mLeftProgressPos,
-                     trimFromEnd = mDuration - mRightProgressPos
-                 )
-             )
-         }*/
-
-        saveAttachmentData()
     }
 
     var position: Int = 0
+    var thumbLeftPosition = 0f
+    var thumbRightPosition = 0f
     fun saveAttachmentData() {
         val isAttachmentExist = AttachmentMediaList.find { it ->
             it.id == position
@@ -520,23 +449,25 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mediaItem.path,
                     if (mediaItem.isVideo) true else false,
                     mLeftProgressPos,
-                    mDuration - mRightProgressPos
+                    mDuration - mRightProgressPos, thumbLeftPosition, thumbRightPosition
                 )
             )
         } else {
             val attachmentIndex = AttachmentMediaList.indexOf(isAttachmentExist)
-            Log.e("Updated", "$mLeftProgressPos")
+
 
 
             AttachmentMediaList.set(
                 attachmentIndex, AttachmentMediaList.get(attachmentIndex).copy(
                     isVideo = if (mediaItem.isVideo) true else false,
                     trimFromStart = mLeftProgressPos,
-                    trimFromEnd = mDuration - mRightProgressPos
+                    trimFromEnd = mDuration - mRightProgressPos,
+                    lastLeftThumbPosition = thumbLeftPosition,
+                    lastRightThumbPosition = thumbRightPosition
                 )
             )
-            Log.e("AttachmentMediaList-Updated", "${AttachmentMediaList.toString()}")
         }
+        Log.e("restore", AttachmentMediaList.toString())
     }
 
     override suspend fun trimMediaItemListener(mmediaItem: MediaItem) {
@@ -579,13 +510,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mVideoView.start()
             }
         }
+
         mDurationFlow(video.duration.toLong()).onStart {
             initRangeSeekBarView(mVideoView.duration)
         }.collect {
             mDuration = it.toInt()
             initRangeSeekBarView(mDuration)
-            Log.e("mDuration", it.toString())
         }
+
 
 
     }
@@ -604,27 +536,26 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mRightProgressPos = MAX_SHOOT_DURATION
 
         }
-        Log.e(
-            "item-decoration",
-            "RECYCLER_VIEW_PADDING-$RECYCLER_VIEW_PADDING  mThumbsTotalCount $mThumbsTotalCount"
-        )
 
 
 
 
-        mRangeSeekBarView =
-            RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
-        mRangeSeekBarView.selectedMinValue = mLeftProgressPos
-        mRangeSeekBarView.selectedMaxValue = mRightProgressPos
-        //  mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+        mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
+
+
+
+        mRangeSeekBarView?.selectedMinValue = mLeftProgressPos
+        mRangeSeekBarView?.selectedMaxValue = mRightProgressPos
         mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
         mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
-        mRangeSeekBarView.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
+        mRangeSeekBarView?.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
-        mRangeSeekBarView.isNotifyWhileDragging = true
+        mRangeSeekBarView?.isNotifyWhileDragging = true
+
         saveAttachmentData()
 
-        mRangeSeekBarView.setOnRangeSeekBarChangeListener(object :
+
+        mRangeSeekBarView?.setOnRangeSeekBarChangeListener(object :
             RangeSeekBarView.OnRangeSeekBarChangeListener {
 
             override fun onRangeSeekBarValuesChanged(
@@ -635,6 +566,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 isMin: Boolean,
                 pressedThumb: RangeSeekBarView.Thumb?
             ) {
+
 
                 mEndTimeTxt.x = maxValue.toFloat() / 10
                 mLeftProgressPos = minValue + scrollPos
@@ -661,6 +593,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                     }
                 }
+
                 mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                 mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
                 saveAttachmentData()
@@ -670,6 +603,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             override fun onNormaliseValuesChanged(min: Float, max: Float) {
                 mStartTimeTxt.x = min
                 mEndTimeTxt.x = max
+                thumbLeftPosition = min
+                thumbRightPosition = max
+                saveAttachmentData()
+
             }
 
         })
@@ -681,10 +618,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mAverageMsPx = 0f
         }
         averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
-        Log.e(
-            "averagePxMs",
-            "mMaxWidth" + mMaxWidth + "/ mRightProgressPos->" + mRightProgressPos + "mLeftProgressPos->" + mLeftProgressPos
-        )
 
     }
 
@@ -808,16 +741,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                     if (scrollX == -RECYCLER_VIEW_PADDING) {
                         scrollPos = 0
-                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                        mLeftProgressPos = mRangeSeekBarView!!.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView!!.selectedMaxValue + scrollPos
 
                         mRedProgressBarPos = mLeftProgressPos
                     } else {
                         isSeeking = true
                         scrollPos =
                             ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
-                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                        mLeftProgressPos = mRangeSeekBarView?.selectedMinValue!! + scrollPos
+                        mRightProgressPos = mRangeSeekBarView?.selectedMaxValue!! + scrollPos
 
                         mRedProgressBarPos = mLeftProgressPos
 
@@ -831,7 +764,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                             mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
                             saveAttachmentData()
-                            mRangeSeekBarView.invalidate()
+                            mRangeSeekBarView?.invalidate()
                         }
                     }
 

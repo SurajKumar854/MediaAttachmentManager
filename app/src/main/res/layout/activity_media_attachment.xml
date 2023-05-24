@@ -173,8 +173,8 @@
                     android:layout_gravity="right"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="@string/trim"
                     android:visibility="gone"
+                    android:text="@string/trim"
                     android:textColor="@android:color/holo_green_dark"
                     android:textSize="16sp"
                     />
