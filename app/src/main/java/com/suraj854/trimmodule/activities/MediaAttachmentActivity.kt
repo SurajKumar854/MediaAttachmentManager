@@ -275,6 +275,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     fun encodeAttachmentsRecursive(index: Int) {
         if (index >= AttachmentMediaList.size) {
+            showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
+            Toast.makeText(this, "Encoded Successfully", Toast.LENGTH_SHORT).show()
             hideLoadingDialog()
             return
         }
