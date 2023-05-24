@@ -193,10 +193,13 @@ class RangeSeekBarView : View {
             rectPaint!!
         )
         Log.e("drawing...", "$thumbLeftPosition/$thumbRigtPosition")
-        mRangeSeekBarChangeListener?.onDragNormaliseValuesChanged(
-            false, normalizedToScreen(normalizedMinValue),
-            normalizedToScreen(normalizedMaxValue)
-        )
+        if (mIsDragging) {
+            mRangeSeekBarChangeListener?.onDragNormaliseValuesChanged(
+                false, normalizedToScreen(normalizedMinValue),
+                normalizedToScreen(normalizedMaxValue)
+            )
+        }
+
         mRangeSeekBarChangeListener?.onNormaliseValuesChanged(
             normalizedToScreen(normalizedMinValue),
             normalizedToScreen(normalizedMaxValue)

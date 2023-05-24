@@ -452,7 +452,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         this.mediaItem = mediaItem
         if (mediaItem.isVideo) {
 
-
+            fragment.updateThumbPositions(
+                position,
+                mediaItem.lastLeftThumbPosition,
+                mediaItem.lastRightThumbPosition
+            )
             initRangeSeekBarView(position, mediaItem, mediaItem.duration)
 
             videoPrepared(Uri.parse(mediaItem.path), mediaItem)
