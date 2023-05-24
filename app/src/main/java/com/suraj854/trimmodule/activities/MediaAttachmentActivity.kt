@@ -129,7 +129,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                             fragment.addMediaItem(
                                 MediaItem(
-                                    uri.uri.toString(), 0, false, 0, 10000, 0f, 1f
+                                    uri.uri.toString(), 0, false, 0, 10000, 0, 1000, 0f, 1f
                                 )
                             )
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
@@ -141,6 +141,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                     true,
                                     0,
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
+                                    0,
+                                    10000,
                                     0f,
                                     1194f
                                 )
@@ -157,7 +159,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                         fragment.addMediaItem(
                             MediaItem(
-                                uri.toString(), 0, false, 0, 10000, 0f, 1f
+                                uri.toString(), 0, false, 0, 10000, 0, 1000, 0f, 1f
 
                             )
                         )
@@ -170,6 +172,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                 true,
                                 0,
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())) - 10000,
+                                0,
+                                10000,
                                 0f,
                                 1194f
                             )
@@ -455,8 +459,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             fragment.updateThumbPositions(
                 position,
                 mediaItem.lastLeftThumbPosition,
-                mediaItem.lastRightThumbPosition
+                mediaItem.lastRightThumbPosition,
+                mediaItem.leftProgress,
+                mediaItem.rightProgress,
+                mediaItem.trimFromEnd
             )
+            mStartTimeTxt.text = convertSecondsToTime(mediaItem.leftProgress / 1000)
+            mEndTimeTxt.text = convertSecondsToTime(mediaItem.rightProgress / 1000)
+            Log.e("  mEndTimeTxt.text", "${convertSecondsToTime(mediaItem.rightProgress / 1000)}")
             initRangeSeekBarView(position, mediaItem, mediaItem.duration)
 
             videoPrepared(Uri.parse(mediaItem.path), mediaItem)
@@ -569,7 +579,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            mRightProgressPos = duration
+            mediaItem.rightProgress = mediaItem.trimFromEnd
 
         } else {
 
@@ -581,9 +591,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
 
 
+        Log.e("fatgayiu", "${mediaItem.leftProgress}/${mediaItem.rightProgress}")
 
-
-        mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
+        mRangeSeekBarView = RangeSeekBarView(this, mediaItem.leftProgress, mediaItem.rightProgress)
 
         var right = 100f
 
@@ -594,8 +604,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
 
-        mRangeSeekBarView?.selectedMinValue = mLeftProgressPos
-        mRangeSeekBarView?.selectedMaxValue = mRightProgressPos
+        mRangeSeekBarView?.selectedMinValue = mediaItem.leftProgress
+        mRangeSeekBarView?.selectedMaxValue = mediaItem.rightProgress
 
         mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
         mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
@@ -620,23 +630,23 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
                 mEndTimeTxt.x = maxValue.toFloat() / 10
-                mLeftProgressPos = minValue + scrollPos
-                mRedProgressBarPos = mLeftProgressPos
-                mRightProgressPos = maxValue + scrollPos
+                mediaItem.leftProgress = minValue + scrollPos
+                mediaItem.rightProgress = mediaItem.leftProgress
+                mediaItem.rightProgress = maxValue + scrollPos
 
                 when (action) {
                     MotionEvent.ACTION_DOWN -> isSeeking = false
                     MotionEvent.ACTION_MOVE -> {
                         isSeeking = true
                         seekTo(
-                            (if (pressedThumb === RangeSeekBarView.Thumb.MIN) mLeftProgressPos else mRightProgressPos).toInt()
+                            (if (pressedThumb === RangeSeekBarView.Thumb.MIN) mediaItem.leftProgress else mediaItem.rightProgress).toInt()
                                 .toLong()
                         )
                     }
 
                     MotionEvent.ACTION_UP -> {
                         isSeeking = false
-                        seekTo(mLeftProgressPos.toInt().toLong())
+                        seekTo(mediaItem.leftProgress.toInt().toLong())
 
                     }
 
@@ -668,7 +678,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 thumbLeftPosition = min
                 thumbRightPosition = max
 
-                fragment.updateThumbPositions(position, min, max)
+                fragment.updateThumbPositions(
+                    position,
+                    min,
+                    max,
+                    mLeftProgressPos,
+                    mRightProgressPos,
+                    duration - mRightProgressPos
+                )
 
 
             }
@@ -684,18 +701,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         } else {
             mAverageMsPx = 0f
         }
-        averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
-
-        CoroutineScope(Dispatchers.Main).launch {
-            mutableStateFlow.collect {
-                if (it != null) {
-
-                    fragment.updateThumbPositions(position, it.l, it.R)
-                }
+        averagePxMs = mMaxWidth * 1.0f / (mediaItem.rightProgress - mediaItem.leftProgress)
 
 
-            }
-        }
 
     }
     private fun playVideoOrPause() {

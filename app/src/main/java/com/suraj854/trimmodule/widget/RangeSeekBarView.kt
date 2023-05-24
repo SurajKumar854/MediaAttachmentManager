@@ -250,6 +250,7 @@ class RangeSeekBarView : View {
 
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+
         if (isTouchDown) {
             return super.onTouchEvent(event)
         }
@@ -258,6 +259,7 @@ class RangeSeekBarView : View {
         }
         if (!isEnabled) return false
         if (absoluteMaxValuePrim <= mMinShootTime) {
+
             return super.onTouchEvent(event)
         }
         val pointerIndex: Int // 记录点击点的index
@@ -265,14 +267,20 @@ class RangeSeekBarView : View {
         when (action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
                 //记住最后一个手指点击屏幕的点的坐标x，mDownMotionX
+
                 mActivePointerId = event.getPointerId(event.pointerCount - 1)
                 pointerIndex = event.findPointerIndex(mActivePointerId)
                 mDownMotionX = event.getX(pointerIndex)
                 // 判断touch到的是最大值thumb还是最小值thumb
                 pressedThumb = evalPressedThumb(mDownMotionX)
+                if (pressedThumb==null){
+                    Log.e("MotionEvent",evalPressedThumb(mDownMotionX).toString())
+                }
+
                 if (pressedThumb == null) return super.onTouchEvent(event)
                 isPressed = true // 设置该控件被按下了
                 onStartTrackingTouch() // 置mIsDragging为true，开始追踪touch事件
+                Log.e("MotionEvent","ACTION_DOWN-onStartTrackingTouch")
                 trackTouchEvent(event)
 
                 attemptClaimDrag()
@@ -284,9 +292,10 @@ class RangeSeekBarView : View {
                 }
             }
 
-            MotionEvent.ACTION_MOVE -> if (pressedThumb != null) {
-                if (mIsDragging) {
+            MotionEvent.ACTION_MOVE ->  if (pressedThumb != null) {
 
+                if (mIsDragging) {
+                    Log.e("MotionEvent","ACTION_MOVE-mIsDragging")
                     trackTouchEvent(event)
                 } else {
                     Log.e("touching...", "sssss")
@@ -309,9 +318,12 @@ class RangeSeekBarView : View {
                         isMin, pressedThumb
                     )
                 }
+            }else {
+                Log.e("Touchnot","touch")
             }
 
             MotionEvent.ACTION_UP -> {
+                Log.e("MotionEvent","ACTION_UP")
                 isPressedThumb = false
                 if (mIsDragging) {
                     trackTouchEvent(event)
@@ -337,6 +349,7 @@ class RangeSeekBarView : View {
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
+                Log.e("MotionEvent","ACTION_POINTER_DOWN-mActivePointerId")
                 val index = event.pointerCount - 1
                 // final int index = ev.getActionIndex();
                 mDownMotionX = event.getX(index)
@@ -345,11 +358,13 @@ class RangeSeekBarView : View {
             }
 
             MotionEvent.ACTION_POINTER_UP -> {
+                Log.e("MotionEvent","ACTION_POINTER_UP-mActivePointerId")
                 onSecondaryPointerUp(event)
                 invalidate()
             }
 
             MotionEvent.ACTION_CANCEL -> {
+                Log.e("MotionEvent","ACTION_CANCEL-mActivePointerId")
                 if (mIsDragging) {
                     onStopTrackingTouch()
                     isPressed = false
@@ -373,6 +388,7 @@ class RangeSeekBarView : View {
     }
 
     private fun trackTouchEvent(event: MotionEvent) {
+        Log.e(TAG, "trackTouchEvent: not working")
         if (event.pointerCount > 1) return
         Log.e(TAG, "trackTouchEvent: " + event.action + " x: " + event.x)
         val pointerIndex = event.findPointerIndex(mActivePointerId) // 得到按下点的index
@@ -380,6 +396,7 @@ class RangeSeekBarView : View {
         x = try {
             event.getX(pointerIndex)
         } catch (e: Exception) {
+            Log.e("Error", e.message.toString())
             return
         }
         if (Thumb.MIN == pressedThumb) {
@@ -387,6 +404,7 @@ class RangeSeekBarView : View {
             setNormalizedMinValue(screenToNormalized(x, 0))
             /*  normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
            */   thumbLeftPosition = normalizedToScreen(normalizedMinValue)
+            postInvalidate()
 
         } else if (Thumb.MAX == pressedThumb) {
             setNormalizedMaxValue(screenToNormalized(x, 1))
@@ -478,6 +496,7 @@ class RangeSeekBarView : View {
      */
     private fun evalPressedThumb(touchX: Float): Thumb? {
         var result: Thumb? = null
+        Log.e("normalizedMinValue",normalizedMinValue.toString())
         val minThumbPressed = isInThumbRange(touchX, normalizedMinValue, 2.0) // 触摸点是否在最小值图片范围内
         val maxThumbPressed = isInThumbRange(touchX, normalizedMaxValue, 2.0)
         if (minThumbPressed && maxThumbPressed) {
@@ -564,8 +583,10 @@ class RangeSeekBarView : View {
         get() = normalizedToValue(normalizedMinValueTime)
         set(value) {
             if (0.0 == absoluteMaxValuePrim - absoluteMinValuePrim) {
+                Log.e("absoluteMaxValuePrim","absoluteMaxValuePrim")
                 setNormalizedMinValue(0.0)
             } else {
+                Log.e("absoluteMaxValuePrim","setNormalizedMinValue")
                 setNormalizedMinValue(valueToNormalized(value))
             }
         }
