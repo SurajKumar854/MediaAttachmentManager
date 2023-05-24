@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -83,7 +84,16 @@ class MediaTypeUtils(){
             retStr = if (i >= 0 && i < 10) "0" + Integer.toString(i) else "" + i
             return retStr
         }
+        fun getVideoDuration(uri: Uri): Long {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(context, uri)
+            val durationString = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+            val duration = durationString?.toLongOrNull() ?: 0L
+            retriever.release()
+            return duration
+        }
     }
+
 
 
 }

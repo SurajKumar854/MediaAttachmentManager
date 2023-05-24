@@ -51,8 +51,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -69,7 +69,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     lateinit var video_frames_recyclerView: RecyclerView
     var frameAdapter: VideoTrimmerAdapter? = null
     lateinit var seekBarLayout: LinearLayout
-    var mRangeSeekBarView: RangeSeekBarView? = null
+
     lateinit var mRedProgressIcon: ImageView
     lateinit var mVideoView: VideoView
     lateinit var mPostBtn: Button
@@ -94,6 +94,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var isSeeking = false
     private lateinit var progressDialog: Dialog
 
+    data class ThumbPos(var l: Float, var R: Float)
+
+    val mutableStateFlow: MutableStateFlow<ThumbPos?> =
+        MutableStateFlow(null)
     private var AttachmentMediaList: MutableList<UploadAttachmentRequest> = mutableListOf()
 
     private var myCoroutineJob: Job? = null
@@ -123,11 +127,26 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                             // Process as an image
 
-                            fragment.addMediaItem(MediaItem(uri.uri.toString(), false))
+                            fragment.addMediaItem(
+                                MediaItem(
+                                    uri.uri.toString(), 0, false, 0, 10000, 0f, 1f
+                                )
+                            )
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                             // Process as a video
-                            fragment.addMediaItem(MediaItem(uri.uri.toString(), true))
+                            fragment.addMediaItem(
+                                MediaItem(
+                                    uri.uri.toString(),
+                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
+                                    true,
+                                    0,
+                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
+                                    0f,
+                                    1194f
+                                )
+                            )
                         }
+
                     }
 
                 } else if (result.data != null) {
@@ -136,16 +155,34 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                         // Process as an image
 
-                        fragment.addMediaItem(MediaItem(uri.toString(), false))
+                        fragment.addMediaItem(
+                            MediaItem(
+                                uri.toString(), 0, false, 0, 10000, 0f, 1f
+
+                            )
+                        )
                     } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                         // Process as a video
-                        fragment.addMediaItem(MediaItem(uri.toString(), true))
+                        fragment.addMediaItem(
+                            MediaItem(
+                                uri.toString(),
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
+                                true,
+                                0,
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())) - 10000,
+                                0f,
+                                1194f
+                            )
+                        )
                     }
                 }
 
             }
 
         }
+
+
+    var attachmentCount = -1
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -187,6 +224,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         addMediaBtn.setOnClickListener {
             if (checkCamStoragePer(this)) {
                 openMultipleMedia()
+
+
             }
 
         }
@@ -204,9 +243,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
 
         }
-        mTrimBtn.setOnClickListener {
-            mRangeSeekBarView?.resetSelectedMinValue = true
-        }
+
 
 
 
@@ -336,8 +373,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         super.onStart()
     }
 
-    private fun videoPrepared(mSourceUri: Uri?) {
-
+    private fun videoPrepared(mSourceUri: Uri?, mediaItem: MediaItem) {
 
 
         /*if (!getRestoreState()) {
@@ -358,19 +394,18 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 mSourceUri
             )// Retrieve media data use microsecond
 
-            if (mDuration <= MAX_SHOOT_DURATION) {
+            if (mediaItem.duration <= MAX_SHOOT_DURATION) {
                 mThumbsTotalCount = MAX_COUNT_RANGE
-                mRightProgressPos = mDuration.toLong()
+                mRightProgressPos = mediaItem.duration
             } else {
 
                 mThumbsTotalCount =
-                    (((mDuration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
+                    (((mediaItem.duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
                 mRightProgressPos = MAX_SHOOT_DURATION
 
             }
-            val interval = (mDuration - startPosition) / (mThumbsTotalCount - 1)
-            Log.e("videoPrepared", "$mThumbsTotalCount")
+            val interval = (mediaItem.duration - startPosition) / (mThumbsTotalCount - 1)
             for (i in 0 until mThumbsTotalCount) {
 
                 val frameTime: Long = startPosition + interval * i.toLong()
@@ -409,28 +444,30 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     override fun hideTrimLayout() {
         trimLL.visibility = View.GONE
 
+
     }
 
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         this.position = position
         this.mediaItem = mediaItem
-
         if (mediaItem.isVideo) {
 
-            videoPrepared(Uri.parse(mediaItem.path))
 
-            saveAttachmentData()
+            initRangeSeekBarView(position, mediaItem, mediaItem.duration)
 
-            if (mRangeSeekBarView != null) {
+            videoPrepared(Uri.parse(mediaItem.path), mediaItem)
+
+            //saveAttachmentData()
+
+            Log.e("Position-left", mediaItem.lastLeftThumbPosition.toString())
+            Log.e("Position-right", mediaItem.lastRightThumbPosition.toString())
+            /*
+
+                      mRangeSeekBarView?.setThumbRightPosition =
+                          AttachmentMediaList.get(position).lastRightThumbPosition*/
 
 
-                mRangeSeekBarView?.setThumbLeftPosition =
-                    AttachmentMediaList.get(position).lastLeftThumbPosition
-
-                mRangeSeekBarView?.setThumbRightPosition =
-                    AttachmentMediaList.get(position).lastRightThumbPosition
-
-            }
+            /*     */
         }
 
     }
@@ -467,7 +504,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 )
             )
         }
-        Log.e("restore", AttachmentMediaList.toString())
+
     }
 
     override suspend fun trimMediaItemListener(mmediaItem: MediaItem) {
@@ -504,36 +541,38 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
             if (mVideoView.isPlaying) {
                 mVideoView.pause()
-                Toast.makeText(this, "Pause", Toast.LENGTH_SHORT).show()
+
             } else {
-                Toast.makeText(this, "resume", Toast.LENGTH_SHORT).show()
                 mVideoView.start()
             }
         }
 
-        mDurationFlow(video.duration.toLong()).onStart {
-            initRangeSeekBarView(mVideoView.duration)
-        }.collect {
-            mDuration = it.toInt()
-            initRangeSeekBarView(mDuration)
-        }
-
+        /*  mDurationFlow(video.duration.toLong()).onStart {
+              initRangeSeekBarView(mVideoView.duration)
+          }.collect {
+              mDuration = it.toInt()
+              initRangeSeekBarView(mDuration)
+          }
+  */
 
 
     }
 
+    lateinit var mRangeSeekBarView: RangeSeekBarView
+    private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
 
-    private fun initRangeSeekBarView(duration: Int) {
-
+        seekBarLayout.removeAllViews()
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            mRightProgressPos = duration.toLong()
+            mRightProgressPos = duration
+
         } else {
 
             mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
             mRightProgressPos = MAX_SHOOT_DURATION
+
 
         }
 
@@ -542,10 +581,18 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
 
+        var right = 100f
+
+        mRangeSeekBarView?.readTrimmer(
+            mediaItem.lastLeftThumbPosition,
+            mediaItem.lastRightThumbPosition
+        )
+
 
 
         mRangeSeekBarView?.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView?.selectedMaxValue = mRightProgressPos
+
         mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
         mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
         mRangeSeekBarView?.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
@@ -596,21 +643,37 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                 mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                 mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
-                saveAttachmentData()
+                //  saveAttachmentData()
 
             }
 
             override fun onNormaliseValuesChanged(min: Float, max: Float) {
                 mStartTimeTxt.x = min
                 mEndTimeTxt.x = max
+                /* thumbLeftPosition = min
+                 thumbRightPosition = max*/
+                // Log.e("updated", "$thumbLeftPosition, $thumbRightPosition")
+
+
+                // saveAttachmentData()
+
+            }
+
+            override fun onDragNormaliseValuesChanged(isPressed: Boolean, min: Float, max: Float) {
+                Log.e("updated-recent", "$isPressed, $thumbRightPosition")
                 thumbLeftPosition = min
                 thumbRightPosition = max
-                saveAttachmentData()
+
+                fragment.updateThumbPositions(position, min, max)
+
 
             }
 
         })
+
         seekBarLayout.addView(mRangeSeekBarView)
+        /* fragment.updateThumbPositions(position, thumbLeftPosition, thumbRightPosition)
+ */
         if (mThumbsTotalCount - MAX_COUNT_RANGE > 0) {
             mAverageMsPx =
                 (duration - MAX_SHOOT_DURATION) / (mThumbsTotalCount - MAX_COUNT_RANGE).toFloat()
@@ -619,8 +682,18 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
         averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
 
-    }
+        CoroutineScope(Dispatchers.Main).launch {
+            mutableStateFlow.collect {
+                if (it != null) {
 
+                    fragment.updateThumbPositions(position, it.l, it.R)
+                }
+
+
+            }
+        }
+
+    }
     private fun playVideoOrPause() {
 
         mRedProgressBarPos = mVideoView.currentPosition.toLong()
@@ -741,16 +814,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                     if (scrollX == -RECYCLER_VIEW_PADDING) {
                         scrollPos = 0
-                        mLeftProgressPos = mRangeSeekBarView!!.selectedMinValue + scrollPos
-                        mRightProgressPos = mRangeSeekBarView!!.selectedMaxValue + scrollPos
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
 
                         mRedProgressBarPos = mLeftProgressPos
                     } else {
                         isSeeking = true
                         scrollPos =
                             ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
-                        mLeftProgressPos = mRangeSeekBarView?.selectedMinValue!! + scrollPos
-                        mRightProgressPos = mRangeSeekBarView?.selectedMaxValue!! + scrollPos
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue!! + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue!! + scrollPos
 
                         mRedProgressBarPos = mLeftProgressPos
 
@@ -764,7 +837,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             mStartTimeTxt.text = convertSecondsToTime(mLeftProgressPos / 1000)
                             mEndTimeTxt.text = convertSecondsToTime(mRightProgressPos / 1000)
                             saveAttachmentData()
-                            mRangeSeekBarView?.invalidate()
+                            mRangeSeekBarView.invalidate()
                         }
                     }
 

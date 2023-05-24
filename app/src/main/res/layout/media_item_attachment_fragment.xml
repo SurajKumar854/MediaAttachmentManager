@@ -12,6 +12,7 @@
     <VideoView
         android:id="@+id/videView"
         android:layout_width="match_parent"
+        android:layout_centerInParent="true"
         android:layout_height="match_parent"
         android:visibility="gone" />
 

@@ -1,6 +1,5 @@
 package com.suraj854.videotrimmerview.widget
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,6 +8,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
+import android.os.Handler
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.util.Log
@@ -162,14 +162,16 @@ class RangeSeekBarView : View {
     var rangeR: Float = 0f
 
     var thumbLeftPosition = 0f
-    var thumbRigtPosition = 0f
+    var thumbRigtPosition = 1000f
 
-    @SuppressLint("DrawAllocation")
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        rangeL = normalizedToScreen(normalizedMinValue)
-        rangeR = normalizedToScreen(normalizedMaxValue)
+        rangeL = thumbLeftPosition
+        rangeR = thumbRigtPosition
+
+
         val bg_middle_left = 0f
         val bg_middle_right = (width - paddingRight).toFloat()
         val leftRect = Rect(bg_middle_left.toInt(), height, rangeL.toInt(), 0)
@@ -190,18 +192,31 @@ class RangeSeekBarView : View {
             height.toFloat(),
             rectPaint!!
         )
-
+        Log.e("drawing...", "$thumbLeftPosition/$thumbRigtPosition")
+        mRangeSeekBarChangeListener?.onDragNormaliseValuesChanged(
+            false, normalizedToScreen(normalizedMinValue),
+            normalizedToScreen(normalizedMaxValue)
+        )
         mRangeSeekBarChangeListener?.onNormaliseValuesChanged(
             normalizedToScreen(normalizedMinValue),
             normalizedToScreen(normalizedMaxValue)
         )
 
 
+
+
         drawThumb(thumbLeftPosition, false, canvas, true)
         drawThumb(thumbRigtPosition, false, canvas, false)
+        Log.e("readTrimmer-final", "${thumbLeftPosition}/${thumbRigtPosition}")
+
+
         /*   drawVideoTrimTimeText(canvas)*/
     }
 
+    var isPressedThumb = true
+
+
+    private val handler = Handler()
     private fun drawThumb(screenCoord: Float, pressed: Boolean, canvas: Canvas, isLeft: Boolean) {
         canvas.drawBitmap(
             (if (pressed) thumbPressedImage else if (isLeft) thumbImageLeft else thumbImageRight)!!,
@@ -294,6 +309,7 @@ class RangeSeekBarView : View {
             }
 
             MotionEvent.ACTION_UP -> {
+                isPressedThumb = false
                 if (mIsDragging) {
                     trackTouchEvent(event)
                     onStopTrackingTouch()
@@ -303,13 +319,17 @@ class RangeSeekBarView : View {
                     trackTouchEvent(event)
                     onStopTrackingTouch()
                 }
+
+
                 invalidate()
+
                 if (mRangeSeekBarChangeListener != null) {
                     mRangeSeekBarChangeListener!!.onRangeSeekBarValuesChanged(
                         this, selectedMinValue, selectedMaxValue, MotionEvent.ACTION_UP, isMin,
                         pressedThumb
                     )
                 }
+
                 pressedThumb = null // 手指抬起，则置被touch到的thumb为空
             }
 
@@ -362,8 +382,15 @@ class RangeSeekBarView : View {
         if (Thumb.MIN == pressedThumb) {
             // screenToNormalized(x)-->得到规格化的0-1的值
             setNormalizedMinValue(screenToNormalized(x, 0))
+            /*  normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
+           */   thumbLeftPosition = normalizedToScreen(normalizedMinValue)
+
         } else if (Thumb.MAX == pressedThumb) {
             setNormalizedMaxValue(screenToNormalized(x, 1))
+
+            thumbRigtPosition = normalizedToScreen(normalizedMaxValue)
+            Log.e("drawing-updated-touch", thumbRigtPosition.toString())
+
         }
     }
 
@@ -503,6 +530,7 @@ class RangeSeekBarView : View {
         mMinShootTime = min_cut_time
     }
 
+
     fun normalizedToScreen(normalizedCoord: Double): Float {
         return (paddingLeft + normalizedCoord * (width - paddingLeft - paddingRight)).toFloat()
     }
@@ -544,19 +572,22 @@ class RangeSeekBarView : View {
             Log.e("calling", "resetSelectedMinValue$")
             shouldRedrawImmediately = value
         }
+    var count = 1
+    fun readTrimmer(left: Float, right: Float) {
+        Log.e("surajss", " ${0}")
 
-    var setThumbLeftPosition: Float
-        get() = thumbLeftPosition
-        set(value) {
+        var n = count++
+        thumbRigtPosition = right
+        thumbLeftPosition = left
+        postInvalidate()
+        Log.e("readTrimmer-right", "${thumbRigtPosition}")
+        Log.e("readTrimmer-left", "${thumbLeftPosition}")
 
-            thumbLeftPosition = value
-        }
-    var setThumbRightPosition: Float
-        get() = thumbRigtPosition
-        set(value) {
 
-            thumbRigtPosition = value
-        }
+
+    }
+
+
     var selectedNormalizedMinValue: Float
         get() = normalizedToScreen(normalizedMinValue)
         set(value) {
@@ -612,6 +643,12 @@ class RangeSeekBarView : View {
         )
 
         fun onNormaliseValuesChanged(
+            min: Float,
+            max: Float
+        )
+
+        fun onDragNormaliseValuesChanged(
+            isPressed: Boolean,
             min: Float,
             max: Float
         )

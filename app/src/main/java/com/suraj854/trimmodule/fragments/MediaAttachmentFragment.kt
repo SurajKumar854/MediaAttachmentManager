@@ -40,7 +40,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
             recyclerView?.findViewHolderForAdapterPosition(position) as? MediaAttachmentAdapter.MediaAttachmentViewHolder
         return viewHolder?.mediaItemVideoView
     }
-
+var currentMediaPage = 0
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -56,7 +56,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 Log.e("registerOnPageChangeCallback-onPageSelected","$position")
-
+                currentMediaPage = position
                 CoroutineScope(Dispatchers.Main).launch {
 
                     val mediaItem = mediaList.get(position)
@@ -69,6 +69,7 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
                         onNonVideoItemClick()
                     }
 
+                    mediaPlackHandler(position, mediaItem)
                     onScrollPosition(position, mediaItem)
                 }
 
@@ -105,6 +106,18 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
 
     }
 
+    fun updateThumbPositions(position: Int, left: Float, right: Float) {
+        val item=mediaList.get(position)
+        item.lastLeftThumbPosition=left
+        item.lastRightThumbPosition=right
+
+Log.e("readTrimmer-updateThumbPositions","left ${left}  right ${right} ")
+
+
+
+
+    }
+
     override suspend fun onVideoPrepared(videoView: VideoView) {
         videoView.seekTo(2)
         trimLayoutListener?.trimVideoVideoListener(videoView)
@@ -115,6 +128,9 @@ class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPrepare
     }
 
     override fun onScrollPosition(position: Int, mediaItem: MediaItem) {
-        trimLayoutListener?.onMediaChange(position,mediaItem)
+        trimLayoutListener?.onMediaChange(position, mediaItem)
+    }
+
+    override fun mediaPlackHandler(position: Int, mediaItem: MediaItem) {
     }
 }

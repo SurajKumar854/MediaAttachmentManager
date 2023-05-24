@@ -2,6 +2,7 @@ package com.suraj854.trimmodule.adapters
 
 
 import android.content.Context
+import android.media.MediaPlayer
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -41,7 +42,6 @@ class MediaAttachmentAdapter(
         position: Int
     ) {
 
-
         val mediaItem = mediaList.get(position)
 
          holder.bind(mediaItem)
@@ -63,8 +63,10 @@ class MediaAttachmentAdapter(
         val mediaItemImageView: ImageView = itemView.findViewById(R.id.imagePreview)
 
         init {
+            itemView.invalidate()
 
             mediaItemVideoView.setOnPreparedListener { mediaPlayer ->
+                mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
                 CoroutineScope(Dispatchers.Main).launch {
                     videoPreparedListener.onVideoPrepared(mediaItemVideoView)
                 }
@@ -78,6 +80,7 @@ class MediaAttachmentAdapter(
 
 
             if (mediaItem.isVideo) {
+
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
                 mediaItemVideoView.visibility = View.VISIBLE
 
