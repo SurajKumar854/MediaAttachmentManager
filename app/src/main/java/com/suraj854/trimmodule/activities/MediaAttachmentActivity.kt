@@ -230,7 +230,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
         mPostBtn.setOnClickListener {
-            if (fragment.getAttachmentList().isEmpty()) {
+            if (AttachmentMediaList.isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -256,15 +256,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     fun encodeAttachmentsRecursive(index: Int) {
-        if (index >= fragment.getAttachmentList().size) {
-            showLoadingDialog("Encoding($index/${fragment.getAttachmentList().size})")
+        if (index >= AttachmentMediaList.size) {
+            showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
             Toast.makeText(this, "Encoded Successfully", Toast.LENGTH_SHORT).show()
             hideLoadingDialog()
             return
         }
-        showLoadingDialog("Encoding($index/${fragment.getAttachmentList().size})")
+        showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
 
-        val uploadMediaAttachment = fragment.getAttachmentList().get(index)
+        val uploadMediaAttachment = AttachmentMediaList.get(index)
         if (uploadMediaAttachment.isVideo) {
             val source = UriDataSource(this, Uri.parse(uploadMediaAttachment.path));
             val start = uploadMediaAttachment.trimFromStart
@@ -303,13 +303,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     }
 
                     override fun onTranscodeCanceled() {
-                        encodeAttachmentsRecursive(fragment.getAttachmentList().size + 2)
+                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
                         hideLoadingDialog()
                     }
 
                     override fun onTranscodeFailed(exception: Throwable) {
                         Log.e("Error on Encode", exception.message.toString())
-                        encodeAttachmentsRecursive(fragment.getAttachmentList().size + 2)
+                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
                         hideLoadingDialog()
                     }
 
@@ -664,7 +664,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 thumbLeftPosition = min
                 thumbRightPosition = max
 
-                fragment.updateThumbPositions(position, min, max,mLeftProgressPos,mRightProgressPos)
+                fragment.updateThumbPositions(position, min, max)
 
 
             }
@@ -682,6 +682,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         }
         averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
 
+        CoroutineScope(Dispatchers.Main).launch {
+            mutableStateFlow.collect {
+                if (it != null) {
+
+                    fragment.updateThumbPositions(position, it.l, it.R)
+                }
+
+
+            }
+        }
 
     }
     private fun playVideoOrPause() {

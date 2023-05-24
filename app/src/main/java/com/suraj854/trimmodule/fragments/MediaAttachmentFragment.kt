@@ -106,24 +106,14 @@ var currentMediaPage = 0
 
     }
 
-    fun getAttachmentList(): List<MediaItem> {
-        return mediaList
-    }
+    fun updateThumbPositions(position: Int, left: Float, right: Float) {
+        val item=mediaList.get(position)
+        item.lastLeftThumbPosition=left
+        item.lastRightThumbPosition=right
 
-    fun updateThumbPositions(
-        position: Int,
-        left: Float,
-        right: Float,
-        leftProgress: Long,
-        rightProgress: Long
-    ) {
-        val item = mediaList.get(position)
-        item.lastLeftThumbPosition = left
-        item.lastRightThumbPosition = right
-        item.trimFromStart = leftProgress
-        item.trimFromEnd = item.duration - rightProgress
+Log.e("readTrimmer-updateThumbPositions","left ${left}  right ${right} ")
 
-        Log.e("readTrimmer-updateThumbPositions", "left ${left}  right ${right} ")
+
 
 
     }
