@@ -124,8 +124,8 @@ var currentMediaPage = 0
         item.lastRightThumbPosition = right
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
-
-        Log.e("readTrimmer-updateThumbPositions", "left ${left}  right ${right} ")
+        item.trimFromStart = leftProgress
+        item.trimFromEnd = item.duration - rightProgress
 
 
     }
@@ -137,7 +137,8 @@ var currentMediaPage = 0
         val item = mediaList.get(position)
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
-
+        item.trimFromStart = leftProgress
+        item.trimFromEnd = item.duration - rightProgress
 
     }
 
