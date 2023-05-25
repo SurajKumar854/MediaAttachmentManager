@@ -131,23 +131,40 @@ var currentMediaPage = 0
     fun updateThumbPositionTimeValues(
         position: Int,
         leftProgress: Long,
-        rightProgress: Long, firstFrameIndex: Int,
+        rightProgress: Long
     ) {
         val item = mediaList.get(position)
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
         item.trimFromStart = leftProgress
         item.trimFromEnd = item.duration - rightProgress
-        item.frameIndex = firstFrameIndex
 
 
     }
+
+
+    fun updateLastFrameScrollPosition(
+        position: Int,
+        frameIndex: Int,
+    ) {
+        var mpostion = position
+        if (mpostion == -1) {
+            mpostion = 0
+        }
+
+        val item = mediaList.get(mpostion)
+
+        Log.e("kukad", "$mpostion  $frameIndex")
+        item.frameIndex = frameIndex
+
+    }
+
 
     fun getMediaList(): List<MediaItem> {
         return mediaList
     }
 
-    override  fun onVideoPrepared(videoView: VideoView) {
+    override fun onVideoPrepared(videoView: VideoView) {
 
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }

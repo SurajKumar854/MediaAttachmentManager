@@ -626,7 +626,6 @@ class RangeSeekBarView : View {
                 Log.e("absoluteMaxValuePrim", "absoluteMaxValuePrim")
                 setNormalizedMinValue(0.0)
             } else {
-                Log.e("absoluteMaxValuePrim","setNormalizedMinValue")
                 setNormalizedMinValue(valueToNormalized(value))
             }
         }

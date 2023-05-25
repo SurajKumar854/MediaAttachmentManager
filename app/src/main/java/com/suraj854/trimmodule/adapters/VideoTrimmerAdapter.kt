@@ -3,6 +3,7 @@ package com.suraj854.trimmodule.adapters
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,7 +26,8 @@ class VideoTrimmerAdapter(private val context: Context) :
     }
 
     override fun onBindViewHolder(holder: TrimmerViewHolder, position: Int) {
-        holder.thumbImageView.setImageBitmap(null)
+
+        Log.e("sfdsfsfs",position.toString())
         holder.thumbImageView.setImageBitmap(mBitmaps[position])
     }
 
