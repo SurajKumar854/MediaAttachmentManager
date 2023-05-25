@@ -9,7 +9,7 @@
 
     <ImageView
         android:id="@+id/thumb"
-        android:layout_width="39dp"
+        android:layout_width="41dp"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
        />

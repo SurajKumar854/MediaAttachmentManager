@@ -428,7 +428,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         VideoTrimmerUtil.THUMB_HEIGHT,
                         false
                     )
+
                 }
+                Log.e(
+                    "requiredThumb",
+                    " ${VideoTrimmerUtil.THUMB_WIDTH} /${VideoTrimmerUtil.THUMB_HEIGHT}"
+                )
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
                         frameAdapter?.addBitmaps(bitmap)
@@ -582,20 +587,22 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            //  mRightProgressPos = duration
-            mRightProgressPos = duration
+            mRightProgressPos = mediaItem.duration
 
         } else {
 
-            mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
-
+            mThumbsTotalCount =
+                (((mediaItem.duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
             mRightProgressPos = MAX_SHOOT_DURATION
 
 
         }
-        mLeftProgressPos = mediaItem.leftProgress
+        Log.e("videoDuration", mediaItem.duration.toString())
+        /*mLeftProgressPos = mediaItem.leftProgress
 
-        mRightProgressPos = mediaItem.rightProgress
+        mRightProgressPos = mediaItem.rightProgress*/
+
+
         Log.e("mdurationFix --b-", "${mediaItem.rightProgress.toString()}")
         Log.e("mdurationFix --c-", "${mRightProgressPos}")
         var itemDecoration: ItemDecoration = SpacesItemDecoration2(
@@ -610,8 +617,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
 
-        mRangeSeekBarView = RangeSeekBarView(this, mediaItem.leftProgress, mediaItem.rightProgress)
-
+        mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
+        mRangeSeekBarView.selectedMinValue = mLeftProgressPos
+        mRangeSeekBarView.selectedMaxValue = mRightProgressPos
         var right = 100f
 //8592
         mRangeSeekBarView?.readTrimmer(
@@ -848,7 +856,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                 } catch (e: java.lang.Exception) {
                     e.printStackTrace()
-                    scrollX = -RECYCLER_VIEW_PADDING
+
                 }
                 if (Math.abs(lastScrollX - scrollX) < mScaledTouchSlop) {
                     isOverScaledTouchSlop = false
@@ -869,7 +877,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                     Log.d(
                         "TagscrollPos ifclase",
-                        "onScrolled  >>>> mLeftProgressPos = ${mLeftProgressPos}/ mRightProgressPos->${mRangeSeekBarView.selectedMaxValue} / scrollX-> ${scrollX} / THUMB_WIDTH->${THUMB_WIDTH}/RECYCLER_VIEW_PADDING-${RECYCLER_VIEW_PADDING}"
+                        "onScrolled  >>>> mRangeSeekBarView.selectedMinValue = ${mRangeSeekBarView.selectedMinValue}/ mRightProgressPos->${mRangeSeekBarView.selectedMaxValue} / scrollX-> ${scrollX} / THUMB_WIDTH->${THUMB_WIDTH}/RECYCLER_VIEW_PADDING-${RECYCLER_VIEW_PADDING}"
                     )
 
 
@@ -887,6 +895,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     Log.d(
                         "TagscrollPos",
                         "onScrolled  >>>> mAverageMsPx = ${mAverageMsPx}/ RECYCLER_VIEW_PADDING->${RECYCLER_VIEW_PADDING} / scrollX-> ${scrollX} / THUMB_WIDTH->${THUMB_WIDTH}"
+                    )
+                    Log.d(
+                        "TagscrollPos eeeese",
+                        "onScrolled  >>>> mRangeSeekBarView.selectedMinValue = ${mRangeSeekBarView.selectedMinValue+scrollPos}/ mRightProgressPos->${mRangeSeekBarView.selectedMaxValue} / scrollX-> ${scrollX} / THUMB_WIDTH->${THUMB_WIDTH}/RECYCLER_VIEW_PADDING-${RECYCLER_VIEW_PADDING}"
                     )
 
 

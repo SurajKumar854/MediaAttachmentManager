@@ -228,6 +228,7 @@ class RangeSeekBarView : View {
     private fun drawVideoTrimTimeText(canvas: Canvas) {
         val leftThumbsTime = DateUtil.convertSecondsToTime(mStartPosition)
         val rightThumbsTime = DateUtil.convertSecondsToTime(mEndPosition)
+        Log.e("rightThumbsTime",rightThumbsTime.toString())
 
         canvas.drawText(
             leftThumbsTime,
@@ -235,6 +236,7 @@ class RangeSeekBarView : View {
             TextPositionY.toFloat(),
             mVideoTrimTimePaintL
         )
+
         canvas.drawText(
             rightThumbsTime,
             normalizedToScreen(thumbNormalizedMaxValue),
@@ -595,6 +597,7 @@ class RangeSeekBarView : View {
 
         mStartPosition = start / 1000
         mEndPosition = end / 1000
+        Log.e("setStartEndTime",mEndPosition.toString())
 
     }
 

@@ -139,7 +139,7 @@ var currentMediaPage = 0
         item.trimFromStart = leftProgress
         item.trimFromEnd = item.duration - rightProgress
         item.frameIndex = firstFrameIndex
-        Log.e("savedFrameIndex", firstFrameIndex.toString())
+
 
     }
 
