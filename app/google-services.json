@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1065911617003",
+    "project_id": "media-attachment-manager",
+    "storage_bucket": "media-attachment-manager.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1065911617003:android:37af2d65f853efc619c5ae",
+        "android_client_info": {
+          "package_name": "com.suraj854.trimmodule"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1065911617003-nebjli42jf13mdk33j32d1i7n0ianp7l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBILDHL0uiKZuBRHKZG9Og3ITj74YRMRKw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1065911617003-nebjli42jf13mdk33j32d1i7n0ianp7l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

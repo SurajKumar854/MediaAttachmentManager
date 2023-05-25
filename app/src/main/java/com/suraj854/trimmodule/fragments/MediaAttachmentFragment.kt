@@ -128,6 +128,7 @@ var currentMediaPage = 0
         item.trimFromEnd = item.duration - rightProgress
 
 
+
     }
     fun updateThumbPositionTimeValues(
         position: Int,

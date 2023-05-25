@@ -225,16 +225,17 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
         mPostBtn.setOnClickListener {
+
             if (fragment.getMediaList().isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
-                CoroutineScope(Dispatchers.Main).launch {
+
 
 
                     showLoadingDialog("Encoding..")
                     encodeAttachments()
 
-                }
+
             }
 
         }
@@ -298,13 +299,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     }
 
                     override fun onTranscodeCanceled() {
-                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
+                        Toast.makeText(applicationContext,"onTranscodeCanceled",Toast.LENGTH_SHORT).show()
+                        encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
                         hideLoadingDialog()
                     }
 
                     override fun onTranscodeFailed(exception: Throwable) {
+
+                        Toast.makeText(applicationContext,"onTranscodeFailed",Toast.LENGTH_SHORT).show()
                         Log.e("Error on Encode", exception.message.toString())
-                        encodeAttachmentsRecursive(AttachmentMediaList.size + 2)
+                        encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
                         hideLoadingDialog()
                     }
 
@@ -807,7 +811,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 var scrollX: Int = 0
 
                 isSeeking = false
-                CoroutineScope(Dispatchers.Default).launch {
+
                     try {
                         scrollX = calcScrollXDistance()
 
@@ -840,7 +844,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                         mRedProgressBarPos = mLeftProgressPos
 
-                        withContext(Dispatchers.Main) {
+
                             if (mVideoView.isPlaying()) {
                                 mVideoView.pause()
                                 setPlayPauseViewIcon(false)
@@ -857,10 +861,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             saveAttachmentData()
                             mRangeSeekBarView.invalidate()
                         }
-                    }
 
 
-                }
+
+
                 lastScrollX = scrollX
             }
         }
