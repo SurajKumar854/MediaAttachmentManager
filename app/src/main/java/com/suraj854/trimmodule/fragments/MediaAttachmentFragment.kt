@@ -106,6 +106,12 @@ var currentMediaPage = 0
 
     }
 
+    fun getMediaItem(position: Int): MediaItem {
+        return mediaList.get(position)
+
+
+    }
+
     fun updateThumbPositions(
         position: Int,
         left: Double,
@@ -133,8 +139,10 @@ var currentMediaPage = 0
         item.rightProgress = rightProgress
 
 
+    }
 
-
+    fun getMediaList(): List<MediaItem> {
+        return mediaList
     }
 
     override suspend fun onVideoPrepared(videoView: VideoView) {

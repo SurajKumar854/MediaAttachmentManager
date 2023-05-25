@@ -38,14 +38,12 @@ import com.suraj854.trimmodule.models.MediaItem
 import com.suraj854.trimmodule.models.UploadAttachmentRequest
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.checkCamStoragePer
-import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.convertSecondsToTime
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.getMediaType
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.MAX_COUNT_RANGE
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.MAX_SHOOT_DURATION
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.RECYCLER_VIEW_PADDING
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.THUMB_WIDTH
-import com.suraj854.trimmodule.utilis.VideoTrimmerUtil.VideoTrimmerUtil.VIDEO_FRAMES_WIDTH
 import com.suraj854.videotrimmerview.widget.RangeSeekBarView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -183,7 +181,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     var attachmentCount = -1
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_attachment)
@@ -205,7 +202,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         progressDialog.setCancelable(false)
         mEndTimeTxt = findViewById(R.id.endTime)
 
-        mMaxWidth = VIDEO_FRAMES_WIDTH
         video_frames_recyclerView = findViewById(R.id.video_frames_recyclerView)
         video_frames_recyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -229,7 +225,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
         mPostBtn.setOnClickListener {
-            if (AttachmentMediaList.isEmpty()) {
+            if (fragment.getMediaList().isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -255,15 +251,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     fun encodeAttachmentsRecursive(index: Int) {
-        if (index >= AttachmentMediaList.size) {
-            showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
+        if (index >= fragment.getMediaList().size) {
+            showLoadingDialog("Encoding($index/${fragment.getMediaList().size})")
             Toast.makeText(this, "Encoded Successfully", Toast.LENGTH_SHORT).show()
             hideLoadingDialog()
             return
         }
-        showLoadingDialog("Encoding($index/${AttachmentMediaList.size})")
+        showLoadingDialog("Encoding($index/${fragment.getMediaList().size})")
 
-        val uploadMediaAttachment = AttachmentMediaList.get(index)
+        val uploadMediaAttachment = fragment.getMediaList().get(index)
         if (uploadMediaAttachment.isVideo) {
             val source = UriDataSource(this, Uri.parse(uploadMediaAttachment.path));
             val start = uploadMediaAttachment.trimFromStart
@@ -617,7 +613,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             ) {
 
                 mLeftProgressPos = minValue + scrollPos
-                mRedProgressBarPos = mLeftProgressPos
+                mRedProgressBarPos = mediaItem.leftProgress
                 mRightProgressPos = maxValue + scrollPos
 
                 when (action) {
@@ -628,6 +624,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             (if (pressedThumb === RangeSeekBarView.Thumb.MIN) mLeftProgressPos else mRightProgressPos).toInt()
                                 .toLong()
                         )
+                        mRedProgressBarPos = mLeftProgressPos
                         fragment.updateThumbPositionTimeValues(
                             position,
                             mLeftProgressPos,
@@ -701,6 +698,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         } else {
             mAverageMsPx = 0f
         }
+        mMaxWidth = VideoTrimmerUtil.VIDEO_FRAMES_WIDTH
         averagePxMs = mMaxWidth * 1.0f / (mRightProgressPos - mLeftProgressPos)
 
 
@@ -779,16 +777,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         if (mRedProgressIcon.visibility == View.GONE) {
             mRedProgressIcon.visibility = View.VISIBLE
         }
+
         val params = mRedProgressIcon.layoutParams as FrameLayout.LayoutParams
         val start = (RECYCLER_VIEW_PADDING + (mRedProgressBarPos - scrollPos) * averagePxMs).toInt()
-        val end = (RECYCLER_VIEW_PADDING + (mRightProgressPos - scrollPos) * averagePxMs).toInt()
+        val end =
+            (RECYCLER_VIEW_PADDING + (fragment.getMediaItem(position).rightProgress - scrollPos) * averagePxMs).toInt()
         mRedProgressAnimator = ValueAnimator.ofInt(start, end)
-            .setDuration(mRightProgressPos - scrollPos - (mRedProgressBarPos - scrollPos))
-        Log.e("Surajs", "start$start+/$end")
-        Log.e("Surajs", "RECYCLER_VIEW_PADDINg$RECYCLER_VIEW_PADDING")
-        Log.e("Surajs", "scrollPos$scrollPos")
-        Log.e("Surajs", "mRightProgressPos$mRedProgressBarPos")
-        Log.e("Surajs", "averagePxMs$averagePxMs")
+            .setDuration(fragment.getMediaItem(position).rightProgress - scrollPos - (mRedProgressBarPos - scrollPos))
+
+        Log.e("mRedProgressAnimator", "${scrollPos}")
         mRedProgressAnimator?.interpolator = LinearInterpolator()
         mRedProgressAnimator?.addUpdateListener(ValueAnimator.AnimatorUpdateListener { animation ->
             params.leftMargin = animation.animatedValue as Int
