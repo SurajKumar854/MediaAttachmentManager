@@ -94,7 +94,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/video_frames_recyclerView"
                     android:layout_width="match_parent"
-                    android:paddingLeft="35dp"
+
                     android:layout_height="50dp"
                     android:layout_gravity="bottom"
                     tools:background="@android:color/holo_green_light" />

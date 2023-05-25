@@ -8,8 +8,8 @@ interface TrimLayoutListener {
     fun showTrimLayout()
     fun hideTrimLayout()
     fun onMediaChange(position: Int,mediaItem: MediaItem)
-   suspend fun trimMediaItemListener(mediaItem: MediaItem)
+    fun trimMediaItemListener(mediaItem: MediaItem)
 
-   suspend fun trimVideoVideoListener(video: VideoView)
+    fun trimVideoVideoListener(video: VideoView)
 
 }

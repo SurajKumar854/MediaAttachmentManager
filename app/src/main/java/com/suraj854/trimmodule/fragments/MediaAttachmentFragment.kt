@@ -57,7 +57,7 @@ var currentMediaPage = 0
                 super.onPageSelected(position)
                 Log.e("registerOnPageChangeCallback-onPageSelected","$position")
                 currentMediaPage = position
-                CoroutineScope(Dispatchers.Main).launch {
+
 
                     val mediaItem = mediaList.get(position)
 
@@ -74,7 +74,7 @@ var currentMediaPage = 0
                 }
 
 
-            }
+
         })
 
         return item
@@ -126,6 +126,7 @@ var currentMediaPage = 0
         item.rightProgress = rightProgress
         item.trimFromStart = leftProgress
         item.trimFromEnd = item.duration - rightProgress
+        Log.e("mdurationFix a-"," left $leftProgress / $rightProgress ")
 
 
 
@@ -147,12 +148,12 @@ var currentMediaPage = 0
         return mediaList
     }
 
-    override suspend fun onVideoPrepared(videoView: VideoView) {
+    override  fun onVideoPrepared(videoView: VideoView) {
         videoView.seekTo(2)
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 
-    override suspend fun onMediaItemListener(mediaItem: MediaItem) {
+    override  fun onMediaItemListener(mediaItem: MediaItem) {
         trimLayoutListener?.trimMediaItemListener(mediaItem)
     }
 

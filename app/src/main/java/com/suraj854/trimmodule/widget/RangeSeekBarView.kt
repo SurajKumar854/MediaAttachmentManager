@@ -481,7 +481,7 @@ class RangeSeekBarView : View {
                 }
                 var resultTime = (paddingRight - padding) / (width - 2 * thumbWidth)
                 resultTime = 1 - resultTime
-                thumbNormalizedMaxValue = Math.min(1.0, Math.max(0.0, resultTime))
+                normalizedMaxValueTime = Math.min(1.0, Math.max(0.0, resultTime))
                 val result = (current_width - padding) / (width - 2 * padding)
                 Math.min(1.0, Math.max(0.0, result)) // 保证该该值为0-1之间，但是什么时候这个判断有用呢？
             }
@@ -574,7 +574,7 @@ class RangeSeekBarView : View {
     }
 
     fun setNormalizedMinValue(value: Double) {
-        normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))
+       /* normalizedMinValue = Math.max(0.0, Math.min(1.0, Math.min(value, normalizedMaxValue)))*/
         thumbNormalizedMinValue =
             Math.max(0.0, Math.min(1.0, Math.min(value, thumbNormalizedMaxValue)))
 
@@ -585,7 +585,7 @@ class RangeSeekBarView : View {
     var thumbNormalizedMinValue: Double = 0.0
     var thumbNormalizedMaxValue: Double = 1.0
     fun setNormalizedMaxValue(value: Double) {
-        normalizedMaxValue = Math.max(0.0, Math.min(1.0, Math.max(value, normalizedMinValue)))
+       // normalizedMaxValue = Math.max(0.0, Math.min(1.0, Math.max(value, normalizedMinValue)))
         thumbNormalizedMaxValue =
             Math.max(0.0, Math.min(1.0, Math.max(value, thumbNormalizedMinValue)))
         Log.e("thumbNormalizedMaxValue", thumbNormalizedMaxValue.toString())
@@ -615,7 +615,7 @@ class RangeSeekBarView : View {
 
         thumbNormalizedMaxValue = right
         thumbNormalizedMinValue = left
-        thumbLeftPosition = 500f
+
         postInvalidate()
 
 
@@ -629,11 +629,13 @@ class RangeSeekBarView : View {
         }
 
     var selectedMaxValue: Long
-        get() = normalizedToValue(thumbNormalizedMaxValue)
+        get() = normalizedToValue(normalizedMaxValueTime)
         set(value) {
             if (0.0 == absoluteMaxValuePrim - absoluteMinValuePrim) {
+                Log.e("TagscrollPos mrangess","${normalizedToValue(thumbNormalizedMaxValue)}")
                 setNormalizedMaxValue(1.0)
             } else {
+                Log.e("TagscrollPos mrange","${normalizedToValue(thumbNormalizedMaxValue)}")
                 setNormalizedMaxValue(valueToNormalized(value))
             }
         }
