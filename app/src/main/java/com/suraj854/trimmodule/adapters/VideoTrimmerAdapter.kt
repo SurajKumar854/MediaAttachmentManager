@@ -3,7 +3,6 @@ package com.suraj854.trimmodule.adapters
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,7 +46,11 @@ class VideoTrimmerAdapter(private val context: Context) :
 
         mBitmaps.clear()
         count = 0
-       this.notifyDataSetChanged()
+        this.notifyDataSetChanged()
+    }
+
+    fun getFrameList(): Int {
+        return mBitmaps.size
     }
 
 

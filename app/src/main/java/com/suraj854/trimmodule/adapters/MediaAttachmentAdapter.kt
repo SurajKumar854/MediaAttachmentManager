@@ -44,7 +44,6 @@ class MediaAttachmentAdapter(
     ) {
 
         val mediaItem = mediaList.get(position)
-
          holder.bind(mediaItem)
     }
 
@@ -58,6 +57,12 @@ class MediaAttachmentAdapter(
         return super.getItemViewType(position)
     }
 
+    override fun onViewAttachedToWindow(holder: MediaAttachmentViewHolder) {
+        super.onViewAttachedToWindow(holder)
+
+        onBindViewHolder(holder, holder.getAdapterPosition());
+
+    }
 
     inner class MediaAttachmentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
@@ -79,12 +84,13 @@ class MediaAttachmentAdapter(
 
         fun bind(mediaItem: MediaItem) {
 
-            Log.e(" bind(mediaItem", " ${mediaItem.path}/${mediaItem.isVideo}")
             if (mediaItem.isVideo) {
 
                 mediaItemImageView.visibility = View.GONE
                 mediaItemVideoView.visibility = View.VISIBLE
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
+
+                mediaItemVideoView.seekTo(mediaItem.leftProgress.toInt())
 
 
             } else {

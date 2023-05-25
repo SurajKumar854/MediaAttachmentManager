@@ -18,9 +18,6 @@ import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.interfaces.VideoPreparedListener
 import com.suraj854.trimmodule.interfaces.ViewPager2Listener
 import com.suraj854.trimmodule.models.MediaItem
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPreparedListener,
     ViewPager2Listener {
@@ -134,13 +131,15 @@ var currentMediaPage = 0
     fun updateThumbPositionTimeValues(
         position: Int,
         leftProgress: Long,
-        rightProgress: Long
+        rightProgress: Long, firstFrameIndex: Int,
     ) {
         val item = mediaList.get(position)
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
         item.trimFromStart = leftProgress
         item.trimFromEnd = item.duration - rightProgress
+        item.frameIndex = firstFrameIndex
+        Log.e("savedFrameIndex", firstFrameIndex.toString())
 
     }
 
@@ -149,7 +148,7 @@ var currentMediaPage = 0
     }
 
     override  fun onVideoPrepared(videoView: VideoView) {
-        videoView.seekTo(2)
+
         trimLayoutListener?.trimVideoVideoListener(videoView)
     }
 

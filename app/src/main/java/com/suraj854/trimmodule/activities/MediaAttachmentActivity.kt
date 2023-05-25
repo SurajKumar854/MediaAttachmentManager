@@ -130,7 +130,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                             fragment.addMediaItem(
                                 MediaItem(
-                                    uri.uri.toString(), 0, false, 0, 10000, 0.0, 1.0, 0, 10000
+                                    uri.uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
                                 )
                             )
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
@@ -139,7 +139,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                 MediaItem(
                                     uri.uri.toString(),
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
-                                    true,
+                                    true, 0,
                                     0,
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
                                     0.0,
@@ -158,7 +158,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                         fragment.addMediaItem(
                             MediaItem(
-                                uri.toString(), 0, false, 0, 10000, 0.0, 1.0, 0, 10000
+                                uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
                             )
                         )
                     } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
@@ -168,7 +168,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                 uri.toString(),
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
                                 true,
-                                0,
+                                0, 0,
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())) - 10000,
                                 0.0,
                                 1.0, 0, 10000
@@ -227,19 +227,22 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
 
         }
+        var pos = 1
         mPostBtn.setOnClickListener {
 
-            if (fragment.getMediaList().isEmpty()) {
-                Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
-            } else {
+            Toast.makeText(this, "${getCurrentScrollIndexofFrameList()}", Toast.LENGTH_SHORT).show()
+            /* if (fragment.getMediaList().isEmpty()) {
+                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
+             } else {
 
 
 
-                    showLoadingDialog("Encoding..")
-                    encodeAttachments()
+                     showLoadingDialog("Encoding..")
+                     encodeAttachments()
 
 
-            }
+             }
+ */
 
         }
 
@@ -437,6 +440,17 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
             mediaMetadataRetriever.release()
 
+
+            myCoroutineJob?.invokeOnCompletion {
+                Log.e(
+                    "Completed",
+                    "${mediaItem.frameIndex} / ${frameAdapter?.getFrameList()}"
+                )
+                video_frames_recyclerView.scrollToPosition(mediaItem.frameIndex)
+            }
+            /*video_frames_recyclerView.scrollX = 300
+            Log.e("sfsfafa",video_frames_recyclerView.scrollState.toString())*/
+
         }
 
 
@@ -458,6 +472,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             initRangeSeekBarView(position, mediaItem, mediaItem.duration)
 
             videoPrepared(Uri.parse(mediaItem.path), mediaItem)
+
 
             //saveAttachmentData()
             Log.e("Position-left", mediaItem.leftProgress.toString())
@@ -562,19 +577,19 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
         video_frames_recyclerView.removeOnScrollListener(mOnScrollListener)
         video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
-        Log.e("mdurationFix --d-", "${mediaItem.rightProgress}")
+
         seekBarLayout.removeAllViews()
-        /*  mLeftProgressPos = 0*/
+        mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
             //  mRightProgressPos = duration
-            mRightProgressPos = mediaItem.rightProgress
+            mRightProgressPos = duration
 
         } else {
 
             mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
 
-            // mRightProgressPos = MAX_SHOOT_DURATION
+            mRightProgressPos = MAX_SHOOT_DURATION
 
 
         }
@@ -594,6 +609,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
 
+
         mRangeSeekBarView = RangeSeekBarView(this, mediaItem.leftProgress, mediaItem.rightProgress)
 
         var right = 100f
@@ -603,16 +619,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         )
 
 
-        /*  mRangeSeekBarView?.selectedMinValue = mLeftProgressPos
-          mRangeSeekBarView?.selectedMaxValue = mRightProgressPos*/
 
 
-        mRangeSeekBarView.setStartEndTime(mLeftProgressPos,mRightProgressPos)
+        mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView?.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
         mRangeSeekBarView?.isNotifyWhileDragging = true
 
-        saveAttachmentData()
+
 
 
         mRangeSeekBarView?.setOnRangeSeekBarChangeListener(object :
@@ -639,11 +653,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             (if (pressedThumb === RangeSeekBarView.Thumb.MIN) mLeftProgressPos else mRightProgressPos).toInt()
                                 .toLong()
                         )
+
                         mRedProgressBarPos = mLeftProgressPos
                         fragment.updateThumbPositionTimeValues(
                             position,
                             mLeftProgressPos,
-                            mRightProgressPos
+                            mRightProgressPos, getCurrentScrollIndexofFrameList(),
                         )
 
                     }
@@ -664,7 +679,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 fragment.updateThumbPositionTimeValues(
                     position,
                     mLeftProgressPos,
-                    mRightProgressPos
+                    mRightProgressPos, getCurrentScrollIndexofFrameList(),
                 )
                 mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
                 //  saveAttachmentData()
@@ -859,11 +874,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-                    fragment.updateThumbPositionTimeValues(
+                   /* fragment.updateThumbPositionTimeValues(
                         position,
                         mLeftProgressPos,
-                        mRightProgressPos
-                    )
+                        mRightProgressPos, getCurrentScrollIndexofFrameList(),
+                    )*/
 
                 } else {
                     isSeeking = true
@@ -883,7 +898,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     fragment.updateThumbPositionTimeValues(
                         position,
                         mLeftProgressPos,
-                        mRightProgressPos
+                        mRightProgressPos, getCurrentScrollIndexofFrameList(),
                     )
                     Log.d(
                         "TagscrollPos else",
@@ -916,6 +931,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     var currentSelectedMediaPage = 0
 
+
+    fun getCurrentScrollIndexofFrameList(): Int {
+        val layoutManager = video_frames_recyclerView.layoutManager as LinearLayoutManager
+        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+        val firstCompletelyVisibleItemPosition =
+            layoutManager.findFirstCompletelyVisibleItemPosition()
+        return firstCompletelyVisibleItemPosition
+
+    }
 
 }
 
