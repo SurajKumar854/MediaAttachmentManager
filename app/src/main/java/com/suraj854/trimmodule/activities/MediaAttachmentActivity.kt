@@ -41,7 +41,6 @@ import com.suraj854.trimmodule.adapters.VideoTrimmerAdapter
 import com.suraj854.trimmodule.fragments.MediaAttachmentFragment
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.models.MediaItem
-import com.suraj854.trimmodule.models.UploadAttachmentRequest
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.checkCamStoragePer
 import com.suraj854.trimmodule.utilis.MediaTypeUtils.MediaUtils.getMediaType
@@ -55,7 +54,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -442,15 +440,19 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mediaMetadataRetriever.release()
 
 
-
-
         }
-      /*  Handler().postDelayed({
-            Log.e("Execuated", "${mediaItem.frameIndex}")
-            video_frames_recyclerView.scrollToPosition(mediaItem.frameIndex)
-        }, 2000)
-*/
+        Handler().postDelayed({
+             isVideoTrimmerRestore = true
+
+             val scrollRestoreVTrimPosition = ((mediaItem.rightProgress).toInt() / 1000)
+
+             video_frames_recyclerView.scrollToPosition((scrollRestoreVTrimPosition))
+             isVideoTrimmerRestore = false
+         }, 5000)
+
     }
+
+    var isVideoTrimmerRestore = false
 
 
     override fun hideTrimLayout() {
@@ -751,7 +753,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         var position = layoutManager.findFirstVisibleItemPosition()
         val firstVisibleChildView = layoutManager.findViewByPosition(position)
     /*    val itemWidth = firstVisibleChildView?.width ?: 0*/
-
+        Log.e("calcScrollXDistance", position.toString())
         return position * 119 - 123
     }
 
@@ -804,6 +806,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         })
         mRedProgressAnimator?.start()
     }
+    var isRestoreTrimmer = false
 
     private val mOnScrollListener: RecyclerView.OnScrollListener =
         object : RecyclerView.OnScrollListener() {
@@ -823,6 +826,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         mRightProgressPos,
                     )
                     fragment.updateLastFrameScrollPosition(position,getCurrentScrollIndexofFrameList())
+
                     seekTo(mLeftProgressPos)
                 }
 
@@ -850,29 +854,42 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 if (scrollX == -RECYCLER_VIEW_PADDING) {
                     scrollPos = 0
 
-                    mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                    mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-                    mRedProgressBarPos = mLeftProgressPos
+                    if (mRightProgressPos <= mediaItem.rightProgress) {
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                        mRedProgressBarPos = mLeftProgressPos
 
+
+                    }
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
 
-                    mRangeSeekBarView.invalidate()
 
+                    mRangeSeekBarView.invalidate()
+                    Toast.makeText(
+                        this@MediaAttachmentActivity, "  isSeeking = false", Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     isSeeking = true
 
+                    val difference = (mRightProgressPos - mLeftProgressPos)
                     scrollPos =
                         ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
 
-                    mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                    mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-                    mRedProgressBarPos = mLeftProgressPos
 
+                    if (mRightProgressPos <= mediaItem.duration) {
+                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                        mRedProgressBarPos = mLeftProgressPos
+
+                    }
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
 
 
+                    Toast.makeText(
+                        this@MediaAttachmentActivity, "  isSeeking = true", Toast.LENGTH_SHORT
+                    ).show()
                     /*
-  */
+*/
                     if (mVideoView.isPlaying()) {
                         mVideoView.pause()
                         setPlayPauseViewIcon(false)
