@@ -228,10 +228,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
 
         }
-        var pos = 1
+        var pos = 0
         mPostBtn.setOnClickListener {
 
-            if (fragment.getMediaList().isEmpty()) {
+            /*if (fragment.getMediaList().isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
 
@@ -240,8 +240,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 encodeAttachments()
 
 
-            }
+            }*/
 
+            val c=((mediaItem.rightProgress-10000)/1000)
+            video_frames_recyclerView.scrollToPosition(c.toInt())
+            Toast.makeText(this, "${c}", Toast.LENGTH_SHORT).show()
 
         }
 
@@ -451,11 +454,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             Log.e("sfsfafa",video_frames_recyclerView.scrollState.toString())*/
 
         }
-        Handler().postDelayed({
+      /*  Handler().postDelayed({
             Log.e("Execuated", "${mediaItem.frameIndex}")
             video_frames_recyclerView.scrollToPosition(mediaItem.frameIndex)
         }, 2000)
-
+*/
     }
 
 
@@ -746,13 +749,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 fragment.updateThumbPositions(
                     position, min, max, mLeftProgressPos, mRightProgressPos
                 )
-                Log.e("mdurationFix --a-", "$mRightProgressPos")
+
 
 
             }
 
         })
-        8952
+
         seekBarLayout.addView(mRangeSeekBarView)
         /* fragment.updateThumbPositions(position, thumbLeftPosition, thumbRightPosition)
  */
@@ -788,10 +791,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mRedProgressAnimator: ValueAnimator? = null
     private val mAnimationHandler = Handler()
     private fun playingRedProgressAnimation() {
+/*
 
         pauseRedProgressAnimation()
         playingAnimation()
         mAnimationHandler.post(mAnimationRunnable)
+*/
 
     }
 
@@ -876,6 +881,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         mRightProgressPos,
                     )
                     fragment.updateLastFrameScrollPosition(position,getCurrentScrollIndexofFrameList())
+                    seekTo(mLeftProgressPos)
                 }
 
             }
@@ -931,7 +937,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         setPlayPauseViewIcon(false)
                     }
                     mRedProgressIcon.setVisibility(View.GONE)
-                    seekTo(mLeftProgressPos)
+
 
 
                     mRangeSeekBarView.invalidate()
