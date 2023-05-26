@@ -27,7 +27,7 @@ class VideoTrimmerAdapter(private val context: Context) :
 
     override fun onBindViewHolder(holder: TrimmerViewHolder, position: Int) {
 
-        Log.e("sfdsfsfs",position.toString())
+
         holder.thumbImageView.setImageBitmap(mBitmaps[position])
     }
 

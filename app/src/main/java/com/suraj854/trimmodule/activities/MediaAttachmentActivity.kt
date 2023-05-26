@@ -210,8 +210,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
 
-        video_frames_recyclerView.adapter = null
-        frameAdapter = null
         frameAdapter = VideoTrimmerAdapter(this)
         video_frames_recyclerView.adapter = frameAdapter
 
@@ -415,8 +413,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 Log.e("frametime", frameTime.toString())
 
                 var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
-                    (frameTime * 1000),
-                    MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                    (frameTime * 1000), MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                 )
 
 
@@ -571,22 +568,61 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     lateinit var mRangeSeekBarView: RangeSeekBarView
+    val minimumDuration = 1
     private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
-        video_frames_recyclerView.removeOnScrollListener(mOnScrollListener)
-        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+
 
         seekBarLayout.removeAllViews()
+
+        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+        /* video_frames_recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                 super.onScrolled(recyclerView, dx, dy)
+                 val layoutManager =
+                     video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
+                 var position = layoutManager.findFirstVisibleItemPosition()
+                 Log.e("startDurationTextView findFirstVisibleItemPosition", position.toString())
+
+                 val firstVisibleChildView = layoutManager.findViewByPosition(position)
+
+                 val itemWidth = firstVisibleChildView?.width ?: 0
+                 Log.e("startDurationTextView itemWidth", itemWidth.toString())
+
+                 var scrollX = position * itemWidth
+
+
+                 if (scrollX == -RECYCLER_VIEW_PADDING) {
+                     scrollPos = 0
+                     mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                     mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+
+                 } else {
+
+                 }
+                 scrollPos =
+                     ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
+
+
+                 mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                 mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+
+                 Log.e(
+                     "startDurationTextView scrollX",
+                     " ${mRangeSeekBarView.selectedMaxValue} + $scrollPos / $mRightProgressPos"
+                 )
+                 mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
+                 mRangeSeekBarView.invalidate()
+             }
+         })*/
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
-            mRightProgressPos = mediaItem.duration
+            mRightProgressPos = duration
 
         } else {
 
-            mThumbsTotalCount =
-                (((mediaItem.duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
+            mThumbsTotalCount = (((duration * 1.0f / (MAX_SHOOT_DURATION.toFloat()) * 10)).toInt())
             mRightProgressPos = MAX_SHOOT_DURATION
-
 
         }
 
@@ -607,9 +643,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
 
-        mRangeSeekBarView = RangeSeekBarView(this, mediaItem.leftProgress, mediaItem.rightProgress)
+        mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView.selectedMaxValue = mRightProgressPos
+        Log.e(
+            "Sdsdsdsds",
+            "$mLeftProgressPos/ $mRightProgressPos  /${mRangeSeekBarView.selectedMinValue} /${mRangeSeekBarView.selectedMaxValue}"
+        )
         var right = 100f
 //8592
         mRangeSeekBarView?.readTrimmer(
@@ -619,7 +659,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
 
-        mRangeSeekBarView.setStartEndTime(mediaItem.leftProgress, mediaItem.rightProgress)
+        mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView?.setMinShootTime(VideoTrimmerUtil.MIN_SHOOT_DURATION)
 
         mRangeSeekBarView?.isNotifyWhileDragging = true
@@ -761,13 +801,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private fun calcScrollXDistance(): Int {
         val layoutManager = video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
         var position = layoutManager.findFirstVisibleItemPosition()
-        if (position == -1) {
-            position = 0
-        }
         val firstVisibleChildView = layoutManager.findViewByPosition(position)
-        val itemWidth = firstVisibleChildView?.width ?: 0
+    /*    val itemWidth = firstVisibleChildView?.width ?: 0*/
 
-        return position * itemWidth - firstVisibleChildView?.left!!
+        return position * 119 - 123
     }
 
     private fun updateVideoProgress() {

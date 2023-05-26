@@ -130,13 +130,13 @@ class RangeSeekBarView : View {
         rectPaint!!.color = whiteColorRes
         mVideoTrimTimePaintL.strokeWidth = 3f
         mVideoTrimTimePaintL.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintL.textSize = 28f
+        mVideoTrimTimePaintL.textSize = 35f
         mVideoTrimTimePaintL.isAntiAlias = true
         mVideoTrimTimePaintL.color = whiteColorRes
         mVideoTrimTimePaintL.textAlign = Paint.Align.LEFT
         mVideoTrimTimePaintR.strokeWidth = 3f
         mVideoTrimTimePaintR.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintR.textSize = 28f
+        mVideoTrimTimePaintR.textSize = 35f
         mVideoTrimTimePaintR.isAntiAlias = true
         mVideoTrimTimePaintR.color = whiteColorRes
         mVideoTrimTimePaintR.textAlign = Paint.Align.RIGHT
@@ -228,7 +228,6 @@ class RangeSeekBarView : View {
     private fun drawVideoTrimTimeText(canvas: Canvas) {
         val leftThumbsTime = DateUtil.convertSecondsToTime(mStartPosition)
         val rightThumbsTime = DateUtil.convertSecondsToTime(mEndPosition)
-        Log.e("rightThumbsTime",rightThumbsTime.toString())
 
         canvas.drawText(
             leftThumbsTime,
@@ -317,7 +316,7 @@ class RangeSeekBarView : View {
                     )
                 }
             }else {
-                Log.e("Touchnot","touch")
+
             }
 
             MotionEvent.ACTION_UP -> {
@@ -425,7 +424,6 @@ class RangeSeekBarView : View {
         } else {
             isMin = false
             var current_width = screenCoord.toDouble()
-            Log.e("screenToNormalized", current_width.toString())
             val rangeL = normalizedToScreen(thumbNormalizedMinValue)
             val rangeR = normalizedToScreen(thumbNormalizedMaxValue)
             val min =
@@ -597,7 +595,7 @@ class RangeSeekBarView : View {
 
         mStartPosition = start / 1000
         mEndPosition = end / 1000
-        Log.e("setStartEndTime",mEndPosition.toString())
+
 
     }
 
