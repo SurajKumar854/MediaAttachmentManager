@@ -223,8 +223,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
 
         }
-        var pos = 0
+        var pos = 10
         mPostBtn.setOnClickListener {
+
 
             if (fragment.getMediaList().isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
@@ -237,9 +238,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
             }
 
-         /*   val c=((mediaItem.rightProgress-10000)/1000)
-            video_frames_recyclerView.scrollToPosition(c.toInt())
-            Toast.makeText(this, "${c}", Toast.LENGTH_SHORT).show()*/
 
         }
 
@@ -269,53 +267,70 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             val start = uploadMediaAttachment.trimFromStart
             val trimFromLeft = uploadMediaAttachment.trimFromEnd
 
-            val trim =
-                TrimDataSource(
-                    source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
-                );
-            val timeStamp =
-                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val outputName = "trimmedVideo_$timeStamp.mp4"
+            try {
+                val trim =
+                    TrimDataSource(
+                        source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
+                    );
+                val timeStamp =
+                    SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val outputName = "trimmedVideo_$timeStamp.mp4"
 
 
 
-            mVideoView.pause()
-            val folder =
-                File("/storage/emulated/0/Android" + "/Trimmed/")
 
-            if (!folder.exists()) {
-                folder.mkdirs()
+                mVideoView.pause()
+                val folder =
+                    File(getExternalFilesDir(null), "$outputName")
+                Log.e("pathss",folder.absolutePath)
+                Transcoder.into("${folder.absoluteFile}")
+
+                    .addDataSource(trim).setListener(object : TranscoderListener {
+
+                        override fun onTranscodeProgress(data: Double) {
+
+                        }
+
+                        override fun onTranscodeCompleted(successCode: Int) {
+
+                            encodeAttachmentsRecursive(index + 1)
+                        }
+
+                        override fun onTranscodeCanceled() {
+                            Toast.makeText(
+                                applicationContext,
+                                "onTranscodeCanceled",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
+                            hideLoadingDialog()
+                        }
+
+                        override fun onTranscodeFailed(exception: Throwable) {
+
+                            Toast.makeText(
+                                applicationContext,
+                                "onTranscodeFailed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.e("Error on Encode", exception.message.toString())
+                            encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
+                            hideLoadingDialog()
+                        }
+
+                    }).transcode()
+            } catch (e: java.lang.Exception) {
+                Toast.makeText(
+                    applicationContext,
+                    "UnSupported Media Please Try again",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
 
-            Transcoder.into("${folder.path}/$outputName")
-
-                .addDataSource(trim).setListener(object : TranscoderListener {
-
-                    override fun onTranscodeProgress(data: Double) {
-
-                    }
-
-                    override fun onTranscodeCompleted(successCode: Int) {
-
-                        encodeAttachmentsRecursive(index + 1)
-                    }
-
-                    override fun onTranscodeCanceled() {
-                        Toast.makeText(applicationContext,"onTranscodeCanceled",Toast.LENGTH_SHORT).show()
-                        encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
-                        hideLoadingDialog()
-                    }
-
-                    override fun onTranscodeFailed(exception: Throwable) {
-
-                        Toast.makeText(applicationContext,"onTranscodeFailed",Toast.LENGTH_SHORT).show()
-                        Log.e("Error on Encode", exception.message.toString())
-                        encodeAttachmentsRecursive(fragment.getMediaList().size + 1)
-                        hideLoadingDialog()
-                    }
-
-                }).transcode()
+            /* if (!folder.exists()) {
+                 folder.mkdirs()
+             }*/
 
 
         } else {
@@ -387,6 +402,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         startPosition = 0
 
+
         myCoroutineJob = CoroutineScope(Dispatchers.Default).launch {
 
             val mediaMetadataRetriever = MediaMetadataRetriever()
@@ -407,6 +423,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
               //  mRightProgressPos = MAX_SHOOT_DURATION
 
             }
+            var mduration = 0
             val interval = (mediaItem.duration - startPosition) / (mThumbsTotalCount - 1)
             for (i in 0 until mThumbsTotalCount) {
 
@@ -430,7 +447,19 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
+                        mduration++
                         frameAdapter?.addBitmaps(bitmap)
+                        if (mduration >= mediaItem.duration / 1000) {
+
+                            var scrollIndexRestore = mediaItem.rightProgress / 1000
+                            mLeftProgressPos = mRightProgressPos - mediaItem.duration
+                            mRightProgressPos =
+                                (mRightProgressPos - mediaItem.duration) + (mRightProgressPos - mLeftProgressPos)
+
+                            video_frames_recyclerView.scrollToPosition((scrollIndexRestore - 1).toInt())
+
+                        }
+
                     }
 
 
@@ -441,18 +470,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
         }
-        Handler().postDelayed({
-             isVideoTrimmerRestore = true
 
-             val scrollRestoreVTrimPosition = ((mediaItem.rightProgress).toInt() / 1000)
 
-             video_frames_recyclerView.scrollToPosition((scrollRestoreVTrimPosition))
-             isVideoTrimmerRestore = false
-         }, 5000)
 
     }
 
-    var isVideoTrimmerRestore = false
 
 
     override fun hideTrimLayout() {
@@ -462,6 +484,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
+
         this.position = position
         this.mediaItem = mediaItem
 
@@ -603,6 +626,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
         mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
+
+
+
+
         mRangeSeekBarView.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView.selectedMaxValue = mRightProgressPos
 
@@ -634,10 +661,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 isMin: Boolean,
                 pressedThumb: RangeSeekBarView.Thumb?
             ) {
+                if (mRightProgressPos <= mediaItem.duration) {
+                    mLeftProgressPos = minValue + scrollPos
+                    mRedProgressBarPos = mediaItem.leftProgress
+                    mRightProgressPos = maxValue + scrollPos
+                }
 
-                mLeftProgressPos = minValue + scrollPos
-                mRedProgressBarPos = mediaItem.leftProgress
-                mRightProgressPos = maxValue + scrollPos
 
                 when (action) {
                     MotionEvent.ACTION_DOWN -> isSeeking = false
@@ -649,11 +678,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         )
 
                         mRedProgressBarPos = mLeftProgressPos
-                        fragment.updateThumbPositionTimeValues(
-                            position,
-                            mLeftProgressPos,
-                            mRightProgressPos,
-                        )
+                        if (mRightProgressPos <= mediaItem.duration) {
+                            fragment.updateThumbPositionTimeValues(
+                                position,
+                                mLeftProgressPos,
+                                mRightProgressPos,
+                            )
+
+                        }
+
 
                     }
 
@@ -690,10 +723,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             ) {
                 thumbLeftPosition = min
                 thumbRightPosition = max
-                fragment.updateThumbPositions(
-                    position, min, max, mLeftProgressPos, mRightProgressPos
-                )
+                if (mRightProgressPos <= mediaItem.rightProgress) {
+                    fragment.updateThumbPositions(
+                        position, min, max, mLeftProgressPos, mRightProgressPos
+                    )
 
+                }
 
 
             }
@@ -820,12 +855,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 }
                 if (newState == SCROLL_STATE_IDLE) {
 
+
                     fragment.updateThumbPositionTimeValues(
                         position,
                         mLeftProgressPos,
                         mRightProgressPos,
                     )
-                    fragment.updateLastFrameScrollPosition(position,getCurrentScrollIndexofFrameList())
+                    fragment.updateLastFrameScrollPosition(
+                        position, getCurrentScrollIndexofFrameList()
+                    )
 
                     seekTo(mLeftProgressPos)
                 }
@@ -835,6 +873,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             @SuppressLint("SuspiciousIndentation")
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
+
 
                 var scrollX: Int = 0
                 isSeeking = false
@@ -854,46 +893,48 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 if (scrollX == -RECYCLER_VIEW_PADDING) {
                     scrollPos = 0
 
-                    if (mRightProgressPos <= mediaItem.rightProgress) {
+                    if (mRightProgressPos <= mediaItem.duration) {
                         mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
                         mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
                         mRedProgressBarPos = mLeftProgressPos
-
-
                     }
+
+
+
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-
-
                     mRangeSeekBarView.invalidate()
-                    Toast.makeText(
-                        this@MediaAttachmentActivity, "  isSeeking = false", Toast.LENGTH_SHORT
-                    ).show()
+
+
+
+                    Log.e(
+                        "mffLeftProgressPosmLimitbhs", "$mLeftProgressPos  $mRightProgressPos"
+                    )
                 } else {
                     isSeeking = true
 
-                    val difference = (mRightProgressPos - mLeftProgressPos)
+
                     scrollPos =
                         ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
-
 
                     if (mRightProgressPos <= mediaItem.duration) {
                         mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
                         mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
                         mRedProgressBarPos = mLeftProgressPos
-
                     }
+
+
+                    seekTo(mLeftProgressPos)
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-
-
-                    Toast.makeText(
-                        this@MediaAttachmentActivity, "  isSeeking = true", Toast.LENGTH_SHORT
-                    ).show()
-                    /*
-*/
-                    if (mVideoView.isPlaying()) {
-                        mVideoView.pause()
-                        setPlayPauseViewIcon(false)
+                    try {
+                        if (mVideoView.isPlaying()) {
+                            mVideoView.pause()
+                            setPlayPauseViewIcon(false)
+                        }
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
                     }
+
+
                     mRedProgressIcon.setVisibility(View.GONE)
 
 
@@ -927,16 +968,16 @@ class SpacesItemDecoration2(private val space: Int, private val thumbnailsCount:
         outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State
     ) {
         val position = parent.getChildAdapterPosition(view)
-        if (position == 0) {
-            outRect.left = space
-            outRect.right = 0
-        } else if (thumbnailsCount > 10 && position == thumbnailsCount - 1) {
-            outRect.left = 0
-            outRect.right = space
-        } else {
-            outRect.left = 0
-            outRect.right = 0
-        }
+        /*  if (position == 0) {
+              outRect.left = space
+              outRect.right = 0
+          } else if (thumbnailsCount > 10 && position == thumbnailsCount - 1) {
+              outRect.left = 0
+              outRect.right = space
+          } else {
+              outRect.left = 0
+              outRect.right = 0
+          }*/
     }
 }
 

@@ -20,7 +20,6 @@ import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.widget.DateUtil
 import com.suraj854.videotrimmerview.utilis.UnitConverter
 import com.suraj854.videotrimmerview.widget.RangeSeekBarView
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import java.text.DecimalFormat
 
@@ -92,7 +91,8 @@ class RangeSeekBarView : View {
         val width = thumbImageLeft?.getWidth()
         val height = thumbImageLeft?.getHeight()
         val newWidth = UnitConverter().dpToPx(11)
-        val newHeight = UnitConverter().dpToPx(55)
+        val newHeight = UnitConverter().dpToPx(52)
+        Log.e("Ssfsafa", height.toString())
         val scaleWidth = newWidth * 1.0f / width!!
         val scaleHeight = newHeight * 1.0f / height!!
         val matrix = Matrix()
@@ -108,19 +108,20 @@ class RangeSeekBarView : View {
         paint = Paint(Paint.ANTI_ALIAS_FLAG)
         rectPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         rectPaint!!.style = Paint.Style.FILL
-        rectPaint!!.color = whiteColorRes
+        rectPaint!!.color = context.resources.getColor(R.color.colorAccent)
         mVideoTrimTimePaintL.strokeWidth = 3f
         mVideoTrimTimePaintL.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintL.textSize = 35f
+        mVideoTrimTimePaintL.textSize = 32f
         mVideoTrimTimePaintL.isAntiAlias = true
-        mVideoTrimTimePaintL.color = whiteColorRes
+        mVideoTrimTimePaintL.color = context.resources.getColor(R.color.black)
         mVideoTrimTimePaintL.textAlign = Paint.Align.LEFT
         mVideoTrimTimePaintR.strokeWidth = 3f
         mVideoTrimTimePaintR.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintR.textSize = 35f
+        mVideoTrimTimePaintR.textSize = 32f
         mVideoTrimTimePaintR.isAntiAlias = true
-        mVideoTrimTimePaintR.color = whiteColorRes
+        mVideoTrimTimePaintR.color = context.resources.getColor(R.color.black)
         mVideoTrimTimePaintR.textAlign = Paint.Align.RIGHT
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -128,10 +129,12 @@ class RangeSeekBarView : View {
         if (MeasureSpec.UNSPECIFIED != MeasureSpec.getMode(widthMeasureSpec)) {
             width = MeasureSpec.getSize(widthMeasureSpec)
         }
-        var height = 120
+        var height = 200
         if (MeasureSpec.UNSPECIFIED != MeasureSpec.getMode(heightMeasureSpec)) {
             height = MeasureSpec.getSize(heightMeasureSpec)
+
         }
+
         setMeasuredDimension(width, height)
     }
 
@@ -169,9 +172,18 @@ class RangeSeekBarView : View {
         )
         canvas.drawRect(
             rangeL,
-            (height - UnitConverter().dpToPx(2)).toFloat(),
+            220f,
             rangeR,
-            height.toFloat(),
+            210f,
+            rectPaint!!
+        )
+
+
+        canvas.drawRect(
+            rangeL,
+            thumbPaddingTop + Companion.paddingTop,
+            rangeR,
+            thumbPaddingTop + UnitConverter().dpToPx(2) + Companion.paddingTop,
             rectPaint!!
         )
 
@@ -216,6 +228,7 @@ class RangeSeekBarView : View {
             TextPositionY.toFloat(),
             mVideoTrimTimePaintL
         )
+        Log.e("Sfasfas", TextPositionY.toString())
 
         canvas.drawText(
             rightThumbsTime,
@@ -669,7 +682,7 @@ class RangeSeekBarView : View {
         const val INVALID_POINTER_ID = 255
         const val ACTION_POINTER_INDEX_MASK = 0x0000ff00
         const val ACTION_POINTER_INDEX_SHIFT = 8
-        private val TextPositionY = UnitConverter().dpToPx(7)
+        private val TextPositionY = UnitConverter().dpToPx(88)
         private val paddingTop = UnitConverter().dpToPx(10)
     }
 }

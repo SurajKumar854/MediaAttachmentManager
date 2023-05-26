@@ -4,7 +4,6 @@ package com.suraj854.trimmodule.adapters
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -66,6 +65,7 @@ class MediaAttachmentAdapter(
 
     inner class MediaAttachmentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val mediaItemVideoView: VideoView = itemView.findViewById(R.id.videView)
+        val mediaItemVideoPlayBtnView: ImageView = itemView.findViewById(R.id.playbackBtn)
         val mediaItemImageView: ImageView = itemView.findViewById(R.id.imagePreview)
 
         init {
@@ -88,16 +88,28 @@ class MediaAttachmentAdapter(
 
                 mediaItemImageView.visibility = View.GONE
                 mediaItemVideoView.visibility = View.VISIBLE
+                mediaItemVideoPlayBtnView.visibility = View.VISIBLE
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
+                mediaItemVideoView.seekTo(1 + mediaItem.leftProgress.toInt())
+                mediaItemVideoPlayBtnView.setOnClickListener {
+                    if (!mediaItemVideoView.isPlaying) {
+                        mediaItemVideoView.start()
+                        mediaItemVideoPlayBtnView.setImageResource(R.drawable.ic_video_pause_black)
 
-                mediaItemVideoView.seekTo(mediaItem.leftProgress.toInt())
+                    } else {
+                        mediaItemVideoView.pause()
+                        mediaItemVideoPlayBtnView.setImageResource(R.drawable.play)
+                    }
+                }
 
 
             } else {
 
 
                 mediaItemVideoView.visibility = View.GONE
+                mediaItemVideoPlayBtnView.visibility = View.GONE
                 mediaItemImageView.visibility = View.VISIBLE
+
                 mediaItemImageView.setImageURI(Uri.parse(mediaItem.path))
             }
 
