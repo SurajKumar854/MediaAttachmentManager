@@ -255,12 +255,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     fun encodeAttachmentsRecursive(index: Int) {
         if (index >= fragment.getMediaList().size) {
-            showLoadingDialog("Encoding($index/${fragment.getMediaList().size})")
+            showLoadingDialog("Encoding($index/${fragment.getMediaList().size - 1})")
             Toast.makeText(this, "Encoded Successfully", Toast.LENGTH_SHORT).show()
             hideLoadingDialog()
             return
         }
-        showLoadingDialog("Encoding($index/${fragment.getMediaList().size})")
+        showLoadingDialog("Encoding($index/${fragment.getMediaList().size - 1})")
 
         val uploadMediaAttachment = fragment.getMediaList().get(index)
         if (uploadMediaAttachment.isVideo) {
@@ -466,8 +466,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         this.position = position
         this.mediaItem = mediaItem
 
-        fragment.updateLastFrameScrollPosition(position - 1, getCurrentScrollIndexofFrameList())
-
+        /*      fragment.updateLastFrameScrollPosition(position - 1, getCurrentScrollIndexofFrameList())
+      */
 
         if (mediaItem.isVideo) {
 
@@ -626,9 +626,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         }
 
-        /*mLeftProgressPos = mediaItem.leftProgress
+        mLeftProgressPos = mediaItem.leftProgress
 
-        mRightProgressPos = mediaItem.rightProgress*/
+        mRightProgressPos = mediaItem.rightProgress
 
 
         var itemDecoration: ItemDecoration = SpacesItemDecoration2(
@@ -848,8 +848,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             (RECYCLER_VIEW_PADDING + (fragment.getMediaItem(position).rightProgress - scrollPos) * averagePxMs).toInt()
         mRedProgressAnimator = ValueAnimator.ofInt(start, end)
             .setDuration(fragment.getMediaItem(position).rightProgress - scrollPos - (mRedProgressBarPos - scrollPos))
-
-        Log.e("mRedProgressAnimator", "${scrollPos}")
         mRedProgressAnimator?.interpolator = LinearInterpolator()
         mRedProgressAnimator?.addUpdateListener(ValueAnimator.AnimatorUpdateListener { animation ->
             params.leftMargin = animation.animatedValue as Int
@@ -892,15 +890,15 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
                     mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
                     mRedProgressBarPos = mLeftProgressPos
-                    mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-                    fragment.updateThumbPositionTimeValues(
-                        position,
-                        mLeftProgressPos,
-                        mRightProgressPos,
-                    )
 
+                    /*  fragment.updateThumbPositionTimeValues(
+                          position,
+                          mLeftProgressPos,
+                          mRightProgressPos,
+                      )
+  */
 
-                    Log.e("setStartEndTime-scroll", mediaItem.frameIndex.toString())
+                    Log.e("medialastpostion", mLeftProgressPos.toString())
                     mRangeSeekBarView.invalidate()
 
                 } else {
@@ -912,19 +910,16 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
                     mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
                     mRedProgressBarPos = mLeftProgressPos
-                    Log.e("setStartEndTime-scroll-2", mLeftProgressPos.toString())
+
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
 
 
-                    fragment.updateThumbPositionTimeValues(
-                        position,
-                        mLeftProgressPos,
-                        mRightProgressPos,
-                    )
-                    Log.d(
-                        "TagscrollPos else",
-                        "onScrolled  >>>> mLeftProgressPos = ${mLeftProgressPos - 10000}/ mRightProgressPos->${mRightProgressPos - 10000} / scrollX-> ${scrollX} / THUMB_WIDTH->${THUMB_WIDTH}/RECYCLER_VIEW_PADDING-${RECYCLER_VIEW_PADDING}"
-                    )
+                    /*  fragment.updateThumbPositionTimeValues(
+                          position,
+                          mLeftProgressPos,
+                          mRightProgressPos,
+                      )
+  */
                     if (mVideoView.isPlaying()) {
                         mVideoView.pause()
                         setPlayPauseViewIcon(false)
@@ -943,24 +938,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         this.mVideoView.seekTo(msec.toInt())
 
     }
-
-    fun skipConditionOnlyFirstTime() {
-        var isFirstTime = true
-
-        // ...
-
-        // Skips the condition only for the first time
-        if (isFirstTime) {
-            isFirstTime = false
-            return
-        }
-
-        // Code to be executed after the first time
-        // ...
-    }
-
-    var pageReload = false
-    var currentSelectedMediaPage = 0
 
 
     fun getCurrentScrollIndexofFrameList(): Int {
