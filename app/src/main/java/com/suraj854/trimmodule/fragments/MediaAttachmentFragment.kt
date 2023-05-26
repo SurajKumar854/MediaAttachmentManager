@@ -148,13 +148,7 @@ var currentMediaPage = 0
         frameIndex: Int,
     ) {
         var mpostion = position
-        if (mpostion == -1) {
-            mpostion = 0
-        }
-
         val item = mediaList.get(mpostion)
-
-        Log.e("kukad", "$mpostion  $frameIndex")
         item.frameIndex = frameIndex
 
     }

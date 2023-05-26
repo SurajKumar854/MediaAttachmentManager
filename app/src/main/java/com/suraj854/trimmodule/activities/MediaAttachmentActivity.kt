@@ -29,6 +29,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import com.otaliastudios.transcoder.Transcoder
 import com.otaliastudios.transcoder.TranscoderListener
 import com.otaliastudios.transcoder.source.TrimDataSource
@@ -466,8 +469,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         this.position = position
         this.mediaItem = mediaItem
 
-        /*      fragment.updateLastFrameScrollPosition(position - 1, getCurrentScrollIndexofFrameList())
-      */
 
         if (mediaItem.isVideo) {
 
@@ -861,6 +862,21 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
+                if (newState == SCROLL_STATE_DRAGGING) {
+                    Log.e("onScrollStateChanged", "Dragging..")
+                }
+                if (newState == SCROLL_STATE_SETTLING) {
+                    Log.e("onScrollStateChanged", "SCROLL_STATE_SETTLING..")
+                }
+                if (newState == SCROLL_STATE_IDLE) {
+                    Log.e("onScrollStateChanged", "SCROLL_STATE_IDLE..")
+                    fragment.updateThumbPositionTimeValues(
+                        position,
+                        mLeftProgressPos,
+                        mRightProgressPos,
+                    )
+                    fragment.updateLastFrameScrollPosition(position,getCurrentScrollIndexofFrameList())
+                }
 
             }
 
@@ -891,14 +907,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
                     mRedProgressBarPos = mLeftProgressPos
 
-                    /*  fragment.updateThumbPositionTimeValues(
-                          position,
-                          mLeftProgressPos,
-                          mRightProgressPos,
-                      )
-  */
+                    mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
 
-                    Log.e("medialastpostion", mLeftProgressPos.toString())
                     mRangeSeekBarView.invalidate()
 
                 } else {
@@ -914,11 +924,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
 
 
-                    /*  fragment.updateThumbPositionTimeValues(
-                          position,
-                          mLeftProgressPos,
-                          mRightProgressPos,
-                      )
+                    /*
   */
                     if (mVideoView.isPlaying()) {
                         mVideoView.pause()
