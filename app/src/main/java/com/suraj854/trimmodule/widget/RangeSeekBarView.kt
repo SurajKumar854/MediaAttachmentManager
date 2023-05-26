@@ -29,10 +29,10 @@ class RangeSeekBarView : View {
     private var mMinShootTime = VideoTrimmerUtil.MIN_SHOOT_DURATION
     private var absoluteMinValuePrim = 0.0
     private var absoluteMaxValuePrim = 0.0
-    private var normalizedMinValue = 0.0 //点坐标占总长度的比例值，范围从0-1
-    private var normalizedMaxValue = 1.0 //点坐标占总长度的比例值，范围从0-1
+    private var normalizedMinValue = 0.0
+    private var normalizedMaxValue = 1.0
     private var normalizedMinValueTime = 0.0
-    private var normalizedMaxValueTime = 1.0 // normalized：规格化的--点坐标占总长度的比例值，范围从0-1
+    private var normalizedMaxValueTime = 1.0
     private var mScaledTouchSlop = 0
     private var thumbImageLeft: Bitmap? = null
     private var thumbImageRight: Bitmap? = null
@@ -53,11 +53,9 @@ class RangeSeekBarView : View {
     private var mIsDragging = false
     private var pressedThumb: Thumb? = null
     private var isMin = false
-    private var min_width = 1.0 //最小裁剪距离
+    private var min_width = 1.0
 
-    /**
-     * 供外部activity调用，控制是都在拖动的时候打印log信息，默认是false不打印
-     */
+
     var isNotifyWhileDragging = false
     private var mRangeSeekBarChangeListener: OnRangeSeekBarChangeListener? = null
     private val whiteColorRes = context.resources.getColor(R.color.white)

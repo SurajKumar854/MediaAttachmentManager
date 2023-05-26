@@ -100,9 +100,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     data class ThumbPos(var l: Float, var R: Float)
 
-    val mutableStateFlow: MutableStateFlow<ThumbPos?> =
-        MutableStateFlow(null)
-    private var AttachmentMediaList: MutableList<UploadAttachmentRequest> = mutableListOf()
 
     private var myCoroutineJob: Job? = null
 
@@ -231,7 +228,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         var pos = 0
         mPostBtn.setOnClickListener {
 
-            /*if (fragment.getMediaList().isEmpty()) {
+            if (fragment.getMediaList().isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
 
@@ -240,11 +237,11 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 encodeAttachments()
 
 
-            }*/
+            }
 
-            val c=((mediaItem.rightProgress-10000)/1000)
+         /*   val c=((mediaItem.rightProgress-10000)/1000)
             video_frames_recyclerView.scrollToPosition(c.toInt())
-            Toast.makeText(this, "${c}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "${c}", Toast.LENGTH_SHORT).show()*/
 
         }
 
@@ -416,7 +413,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             for (i in 0 until mThumbsTotalCount) {
 
                 val frameTime: Long = startPosition + interval * i.toLong()
-                Log.e("frametime", frameTime.toString())
+
 
                 var bitmap: Bitmap? = mediaMetadataRetriever.getFrameAtTime(
                     (frameTime * 1000), MediaMetadataRetriever.OPTION_CLOSEST_SYNC
@@ -432,10 +429,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     )
 
                 }
-                Log.e(
-                    "requiredThumb",
-                    " ${VideoTrimmerUtil.THUMB_WIDTH} /${VideoTrimmerUtil.THUMB_HEIGHT}"
-                )
+
                 if (bitmap != null) {
                     withContext(Dispatchers.Main) {
                         frameAdapter?.addBitmaps(bitmap)
@@ -448,10 +442,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             mediaMetadataRetriever.release()
 
 
-            /**/
 
-            /*video_frames_recyclerView.scrollX = 300
-            Log.e("sfsfafa",video_frames_recyclerView.scrollState.toString())*/
 
         }
       /*  Handler().postDelayed({
@@ -572,52 +563,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     lateinit var mRangeSeekBarView: RangeSeekBarView
-    val minimumDuration = 1
+
     private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
 
 
         seekBarLayout.removeAllViews()
 
         video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
-        /* video_frames_recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                 super.onScrolled(recyclerView, dx, dy)
-                 val layoutManager =
-                     video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
-                 var position = layoutManager.findFirstVisibleItemPosition()
-                 Log.e("startDurationTextView findFirstVisibleItemPosition", position.toString())
 
-                 val firstVisibleChildView = layoutManager.findViewByPosition(position)
-
-                 val itemWidth = firstVisibleChildView?.width ?: 0
-                 Log.e("startDurationTextView itemWidth", itemWidth.toString())
-
-                 var scrollX = position * itemWidth
-
-
-                 if (scrollX == -RECYCLER_VIEW_PADDING) {
-                     scrollPos = 0
-                     mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                     mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-
-                 } else {
-
-                 }
-                 scrollPos =
-                     ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
-
-
-                 mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                 mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-
-                 Log.e(
-                     "startDurationTextView scrollX",
-                     " ${mRangeSeekBarView.selectedMaxValue} + $scrollPos / $mRightProgressPos"
-                 )
-                 mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
-                 mRangeSeekBarView.invalidate()
-             }
-         })*/
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
@@ -650,10 +603,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         mRangeSeekBarView = RangeSeekBarView(this, mLeftProgressPos, mRightProgressPos)
         mRangeSeekBarView.selectedMinValue = mLeftProgressPos
         mRangeSeekBarView.selectedMaxValue = mRightProgressPos
-        Log.e(
-            "Sdsdsdsds",
-            "$mLeftProgressPos/ $mRightProgressPos  /${mRangeSeekBarView.selectedMinValue} /${mRangeSeekBarView.selectedMaxValue}"
-        )
+
         var right = 100f
 //8592
         mRangeSeekBarView?.readTrimmer(
@@ -728,14 +678,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             }
 
             override fun onNormaliseValuesChanged(min: Float, max: Float) {
-                /*mStartTimeTxt.x = min
-                mEndTimeTxt.x = max*/
-                /* thumbLeftPosition = min
-                 thumbRightPosition = max*/
-                // Log.e("updated", "$thumbLeftPosition, $thumbRightPosition")
-
-
-                // saveAttachmentData()
 
             }
 
@@ -868,13 +810,13 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 if (newState == SCROLL_STATE_DRAGGING) {
-                    Log.e("onScrollStateChanged", "Dragging..")
+
                 }
                 if (newState == SCROLL_STATE_SETTLING) {
-                    Log.e("onScrollStateChanged", "SCROLL_STATE_SETTLING..")
+
                 }
                 if (newState == SCROLL_STATE_IDLE) {
-                    Log.e("onScrollStateChanged", "SCROLL_STATE_IDLE..")
+
                     fragment.updateThumbPositionTimeValues(
                         position,
                         mLeftProgressPos,
@@ -890,7 +832,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                Log.e("onScrolled", dx.toString())
                 var scrollX: Int = 0
                 isSeeking = false
                 try {
