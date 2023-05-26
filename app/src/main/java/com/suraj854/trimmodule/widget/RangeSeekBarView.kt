@@ -111,13 +111,13 @@ class RangeSeekBarView : View {
         rectPaint!!.color = context.resources.getColor(R.color.colorAccent)
         mVideoTrimTimePaintL.strokeWidth = 3f
         mVideoTrimTimePaintL.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintL.textSize = 32f
+        mVideoTrimTimePaintL.textSize = 42f
         mVideoTrimTimePaintL.isAntiAlias = true
         mVideoTrimTimePaintL.color = context.resources.getColor(R.color.black)
         mVideoTrimTimePaintL.textAlign = Paint.Align.LEFT
         mVideoTrimTimePaintR.strokeWidth = 3f
         mVideoTrimTimePaintR.setARGB(255, 51, 51, 51)
-        mVideoTrimTimePaintR.textSize = 32f
+        mVideoTrimTimePaintR.textSize = 42f
         mVideoTrimTimePaintR.isAntiAlias = true
         mVideoTrimTimePaintR.color = context.resources.getColor(R.color.black)
         mVideoTrimTimePaintR.textAlign = Paint.Align.RIGHT
@@ -158,8 +158,8 @@ class RangeSeekBarView : View {
 
         val bg_middle_left = 0f
         val bg_middle_right = (width - paddingRight).toFloat()
-        val leftRect = Rect(bg_middle_left.toInt(), height, rangeL.toInt(), 0)
-        val rightRect = Rect(rangeR.toInt(), height, bg_middle_right.toInt(), 0)
+        val leftRect = Rect(bg_middle_left.toInt(), 210, rangeL.toInt(), 35)
+        val rightRect = Rect(rangeR.toInt(), 210, bg_middle_right.toInt(), 35)
         canvas.drawRect(leftRect, mShadow)
         canvas.drawRect(rightRect, mShadow)
 
