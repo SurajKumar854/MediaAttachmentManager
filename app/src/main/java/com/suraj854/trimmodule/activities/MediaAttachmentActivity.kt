@@ -733,12 +733,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private var mRedProgressAnimator: ValueAnimator? = null
     private val mAnimationHandler = Handler()
     private fun playingRedProgressAnimation() {
-/*
+
 
         pauseRedProgressAnimation()
         playingAnimation()
         mAnimationHandler.post(mAnimationRunnable)
-*/
+
 
     }
 
