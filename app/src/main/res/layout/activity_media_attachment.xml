@@ -96,8 +96,8 @@ android:visibility="gone"
 
                     android:layout_height="50dp"
                     android:layout_gravity="bottom"
-                    android:layout_marginStart="@dimen/_30sdp"
-                    android:layout_marginEnd="@dimen/_30sdp"
+                    android:paddingStart="@dimen/_30sdp"
+                    android:paddingEnd="@dimen/_30sdp"
                     android:layout_marginBottom="20dp"
 
                     tools:background="@android:color/holo_green_light" />

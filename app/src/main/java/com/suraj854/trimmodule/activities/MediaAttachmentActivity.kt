@@ -247,6 +247,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     }
 
+
+
     fun encodeAttachments() {
         encodeAttachmentsRecursive(0)
 
@@ -284,7 +286,8 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 val folder =
                     File(getExternalFilesDir(null), "$outputName")
                 Log.e("pathss",folder.absolutePath)
-                Transcoder.into("${folder.absoluteFile}")
+
+               /* Transcoder.into("${folder.absoluteFile}")
 
                     .addDataSource(trim).setListener(object : TranscoderListener {
 
@@ -319,7 +322,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                             hideLoadingDialog()
                         }
 
-                    }).transcode()
+                    }).transcode()*/
             } catch (e: java.lang.Exception) {
                 Toast.makeText(
                     applicationContext,
@@ -497,6 +500,10 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
 
     }
+    private var maxDurationInMs: Int = 0
+    private fun setMaxDurationInMs(maxDurationInMs: Int) {
+        this.maxDurationInMs = maxDurationInMs
+    }
 
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
 
@@ -604,12 +611,33 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
     lateinit var mRangeSeekBarView: RangeSeekBarView
 
+
+    fun updateTrimmerUI(startPos: Long, endPos: Long, duration: Long) {
+
+    }
+
     private fun initRangeSeekBarView(position: Int, mediaItem: MediaItem, duration: Long) {
 
 
         seekBarLayout.removeAllViews()
 
-        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+        var scrollPos = 0
+      //  video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+        video_frames_recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+            }
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager =
+                    video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
+                val visibleItemCount = layoutManager.childCount
+                Log.e("visibleItemCount", visibleItemCount.toString())
+
+
+            }
+        })
 
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
