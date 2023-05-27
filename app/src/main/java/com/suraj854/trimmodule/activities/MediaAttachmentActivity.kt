@@ -222,6 +222,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
             }
 
+
         }
         var pos = 10
         mPostBtn.setOnClickListener {
@@ -353,7 +354,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     private fun openMultipleMedia() {
+        Toast.makeText(this, "Click", Toast.LENGTH_SHORT).show()
         try {
+
             val intent = Intent()
             intent.type = "*/*"
             val mimeTypes = arrayOf("image/*", "video/*")

@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
@@ -33,8 +35,6 @@ class MediaTypeUtils(){
 
          fun checkCamStoragePer(activityCompat: Activity): Boolean {
             return checkPermission(activityCompat,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA
             )
         }
@@ -42,11 +42,15 @@ class MediaTypeUtils(){
         private fun checkPermission(activityCompat: Activity,vararg permissions: String): Boolean {
             var allPermitted = false
             for (permission in permissions) {
+
                 allPermitted = (ContextCompat.checkSelfPermission(
                     context,
                     permission
                 ) == PackageManager.PERMISSION_GRANTED)
-                if (!allPermitted) break
+                if (!allPermitted) {
+                    Log.e("permission not",permission)
+                    break
+                }
             }
             if (allPermitted) return true
             ActivityCompat.requestPermissions(

@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -34,6 +33,8 @@ class RangeSeekBarView : View {
     private var normalizedMaxValueTime = 1.0
     private var mScaledTouchSlop = 0
     private var thumbImageLeft: Bitmap? = null
+    private var thumbArrowImageLeft: Bitmap? = null
+    private var thumbArrowImageRight: Bitmap? = null
     private var thumbImageRight: Bitmap? = null
     private var thumbPressedImage: Bitmap? = null
     private var paint: Paint? = null
@@ -88,18 +89,29 @@ class RangeSeekBarView : View {
     private fun init() {
         mScaledTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
         thumbImageLeft = BitmapFactory.decodeResource(resources, R.drawable.ic_video_thumb_handle)
+        thumbArrowImageLeft =
+            BitmapFactory.decodeResource(resources, R.drawable.arrow_left)
+        thumbArrowImageRight =
+            BitmapFactory.decodeResource(resources, R.drawable.arrow_right)
         val width = thumbImageLeft?.getWidth()
         val height = thumbImageLeft?.getHeight()
-        val newWidth = UnitConverter().dpToPx(11)
-        val newHeight = UnitConverter().dpToPx(52)
-        Log.e("Ssfsafa", height.toString())
+
+        val newWidth = UnitConverter().dpToPx(15)
+        val newHeight = UnitConverter().dpToPx(60)
         val scaleWidth = newWidth * 1.0f / width!!
         val scaleHeight = newHeight * 1.0f / height!!
         val matrix = Matrix()
+        val matrixss = Matrix()
+        matrixss.postScale(
+            newWidth * 1.0f / thumbArrowImageLeft!!.width,
+            UnitConverter().dpToPx(55) * 1.0f / thumbArrowImageLeft!!.height
+        )
         matrix.postScale(scaleWidth, scaleHeight)
+
         thumbImageLeft = Bitmap.createBitmap(thumbImageLeft!!, 0, 0, width, height, matrix, true)
         thumbImageRight = thumbImageLeft
         thumbPressedImage = thumbImageLeft
+        //thumbPressedImage = thumbArrowImageLeft
         thumbWidth = newWidth
         thumbHalfWidth = (thumbWidth / 2).toFloat()
         val shadowColor = context.resources.getColor(R.color.shadow_color)
@@ -113,13 +125,13 @@ class RangeSeekBarView : View {
         mVideoTrimTimePaintL.setARGB(255, 51, 51, 51)
         mVideoTrimTimePaintL.textSize = 42f
         mVideoTrimTimePaintL.isAntiAlias = true
-        mVideoTrimTimePaintL.color = context.resources.getColor(R.color.black)
+        mVideoTrimTimePaintL.color = context.resources.getColor(R.color.red)
         mVideoTrimTimePaintL.textAlign = Paint.Align.LEFT
         mVideoTrimTimePaintR.strokeWidth = 3f
         mVideoTrimTimePaintR.setARGB(255, 51, 51, 51)
         mVideoTrimTimePaintR.textSize = 42f
         mVideoTrimTimePaintR.isAntiAlias = true
-        mVideoTrimTimePaintR.color = context.resources.getColor(R.color.black)
+        mVideoTrimTimePaintR.color = context.resources.getColor(R.color.red)
         mVideoTrimTimePaintR.textAlign = Paint.Align.RIGHT
 
     }
@@ -158,8 +170,10 @@ class RangeSeekBarView : View {
 
         val bg_middle_left = 0f
         val bg_middle_right = (width - paddingRight).toFloat()
-        val leftRect = Rect(bg_middle_left.toInt(), 210, rangeL.toInt(), 35)
-        val rightRect = Rect(rangeR.toInt(), 210, bg_middle_right.toInt(), 35)
+        val leftRect =
+            Rect(bg_middle_left.toInt(), height - UnitConverter().dpToPx(19), rangeL.toInt(), 0)
+        val rightRect =
+            Rect(rangeR.toInt(), height - UnitConverter().dpToPx(19), bg_middle_right.toInt(), 0)
         canvas.drawRect(leftRect, mShadow)
         canvas.drawRect(rightRect, mShadow)
 
@@ -167,25 +181,32 @@ class RangeSeekBarView : View {
             rangeL,
             thumbPaddingTop + Companion.paddingTop,
             rangeR,
-            thumbPaddingTop + UnitConverter().dpToPx(2) + Companion.paddingTop,
+            thumbPaddingTop + UnitConverter().dpToPx(14) + Companion.paddingTop,
             rectPaint!!
         )
         canvas.drawRect(
             rangeL,
-            220f,
+            height.toFloat() - UnitConverter().dpToPx(18),
             rangeR,
-            210f,
+            height.toFloat() - UnitConverter().dpToPx(20),
             rectPaint!!
         )
+        /*   canvas.drawRect(
+               rangeL,
+               (height - UnitConverter().dpToPx(4f)).toFloat(),
+               rangeR-10f,
+               height.toFloat()-10f,
+               rectPaint!!
+           )*/
 
-
-        canvas.drawRect(
-            rangeL,
-            thumbPaddingTop + Companion.paddingTop,
-            rangeR,
-            thumbPaddingTop + UnitConverter().dpToPx(2) + Companion.paddingTop,
-            rectPaint!!
-        )
+        /*
+                canvas.drawRect(
+                    rangeL,
+                    thumbPaddingTop + Companion.paddingTop,
+                    rangeR,
+                    thumbPaddingTop + UnitConverter().dpToPx(2) + Companion.paddingTop,
+                    rectPaint!!
+                )*/
 
         if (mIsDragging) {
             mRangeSeekBarChangeListener?.onDragNormaliseValuesChanged(
@@ -206,7 +227,13 @@ class RangeSeekBarView : View {
     }
 
     var isPressedThumb = true
-
+    fun drawRectangle(left: Int, top: Int, right: Int, bottom: Int, canvas: Canvas, paint: Paint?) {
+        var right = right
+        var bottom = bottom
+        right = left + right // width is the distance from left to right
+        bottom = top + bottom // height is the distance from top to bottom
+        canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), paint!!)
+    }
 
     private val handler = Handler()
     private fun drawThumb(screenCoord: Float, pressed: Boolean, canvas: Canvas, isLeft: Boolean) {
@@ -216,6 +243,13 @@ class RangeSeekBarView : View {
             Companion.paddingTop.toFloat(),
             paint
         )
+        canvas.drawBitmap(
+            (if (pressed) thumbPressedImage else if (isLeft) thumbArrowImageLeft else thumbArrowImageRight)!!,
+            screenCoord - if (isLeft) 0 else thumbWidth,
+            UnitConverter().dpToPx(35).toFloat(),
+            paint
+        )
+
     }
 
     private fun drawVideoTrimTimeText(canvas: Canvas) {
@@ -228,7 +262,7 @@ class RangeSeekBarView : View {
             TextPositionY.toFloat(),
             mVideoTrimTimePaintL
         )
-        Log.e("Sfasfas", TextPositionY.toString())
+
 
         canvas.drawText(
             rightThumbsTime,
@@ -682,7 +716,7 @@ class RangeSeekBarView : View {
         const val INVALID_POINTER_ID = 255
         const val ACTION_POINTER_INDEX_MASK = 0x0000ff00
         const val ACTION_POINTER_INDEX_SHIFT = 8
-        private val TextPositionY = UnitConverter().dpToPx(88)
+        private val TextPositionY = UnitConverter().dpToPx(90f)
         private val paddingTop = UnitConverter().dpToPx(10)
     }
 }
