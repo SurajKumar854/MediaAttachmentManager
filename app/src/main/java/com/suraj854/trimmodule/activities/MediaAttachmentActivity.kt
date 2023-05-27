@@ -354,7 +354,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     }
 
     private fun openMultipleMedia() {
-        Toast.makeText(this, "Click", Toast.LENGTH_SHORT).show()
+
         try {
 
             val intent = Intent()
