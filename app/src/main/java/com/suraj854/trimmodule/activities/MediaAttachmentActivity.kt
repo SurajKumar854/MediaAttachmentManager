@@ -452,14 +452,26 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     withContext(Dispatchers.Main) {
                         mduration++
                         frameAdapter?.addBitmaps(bitmap)
-                        if (mduration >= mediaItem.duration / 1000) {
+                        if (mduration == (mediaItem.duration / 1000).toInt()) {
 
-                            var scrollIndexRestore = mediaItem.rightProgress / 1000
+
                             mLeftProgressPos = mRightProgressPos - mediaItem.duration
-                            mRightProgressPos =
-                                (mRightProgressPos - mediaItem.duration) + (mRightProgressPos - mLeftProgressPos)
+                            if (mLeftProgressPos < 0 && mRightProgressPos < 0) {
+                                mLeftProgressPos = 0
+                                mRightProgressPos = 10000
+                                dataManager = MediaManagerState.InitialScroll
+                            }
 
-                            video_frames_recyclerView.scrollToPosition((scrollIndexRestore - 1).toInt())
+
+
+
+                            if (dataManager != MediaManagerState.InitialScroll && dataManager != MediaManagerState.EMPTY) {
+                                mRightProgressPos =
+                                    (mRightProgressPos - mediaItem.duration) + (mRightProgressPos - mLeftProgressPos)
+                                var scrollIndexRestore = mediaItem.rightProgress / 1000
+                                video_frames_recyclerView.scrollToPosition((scrollIndexRestore).toInt())
+                            }
+
 
                         }
 
@@ -704,12 +716,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     }
                 }
 
-
-                /*fragment.updateThumbPositionTimeValues(
-                    position,
-                    mLeftProgressPos,
-                    mRightProgressPos, getCurrentScrollIndexofFrameList(),
-                )*/
                 mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
                 //  saveAttachmentData()
 
@@ -844,8 +850,9 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         })
         mRedProgressAnimator?.start()
     }
-    var isRestoreTrimmer = false
 
+    var isRestoreTrimmer = false
+    var dataManager: MediaManagerState = MediaManagerState.EMPTY
     private val mOnScrollListener: RecyclerView.OnScrollListener =
         object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -872,6 +879,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                 }
 
             }
+
 
             @SuppressLint("SuspiciousIndentation")
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -919,12 +927,35 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     scrollPos =
                         ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
 
-                    if (mRightProgressPos <= mediaItem.duration) {
-                        mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
-                        mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
-                        mRedProgressBarPos = mLeftProgressPos
+                    if (mRightProgressPos <= mediaItem.duration && mLeftProgressPos.toInt() != 0) {
+
+                    } else {
+
                     }
 
+                    if (scrollPos > 10 || mLeftProgressPos > 0) {
+                        dataManager = MediaManagerState.SecondScroll
+                    }
+                    Log.e(
+                        "mffLeftProgressseconds$scrollPos", "$mLeftProgressPos  $mRightProgressPos"
+                    )
+                    when (dataManager) {
+                        is MediaManagerState.EMPTY -> {
+
+                        }
+
+                        is MediaManagerState.InitialScroll -> {
+                            mLeftProgressPos = mRangeSeekBarView.selectedMinValue
+                            mRightProgressPos = mRangeSeekBarView.selectedMaxValue
+                            mRedProgressBarPos = mLeftProgressPos
+                        }
+
+                        is MediaManagerState.SecondScroll -> {
+                            mLeftProgressPos = mRangeSeekBarView.selectedMinValue + scrollPos
+                            mRightProgressPos = mRangeSeekBarView.selectedMaxValue + scrollPos
+                            mRedProgressBarPos = mLeftProgressPos
+                        }
+                    }
 
                     seekTo(mLeftProgressPos)
                     mRangeSeekBarView.setStartEndTime(mLeftProgressPos, mRightProgressPos)
@@ -951,6 +982,12 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
     private fun seekTo(msec: Long) {
         this.mVideoView.seekTo(msec.toInt())
 
+    }
+
+    sealed class MediaManagerState {
+        object EMPTY : MediaManagerState()
+        object InitialScroll : MediaManagerState()
+        object SecondScroll : MediaManagerState()
     }
 
 
