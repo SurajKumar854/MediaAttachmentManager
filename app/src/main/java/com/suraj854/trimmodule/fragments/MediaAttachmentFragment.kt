@@ -151,6 +151,8 @@ var currentMediaPage = 0
         val item = mediaList.get(position)
         item.lastLeftThumbPosition = left
 
+        Log.e("SAVESSSS",item.lastLeftThumbPosition.toString() )
+
     }
 
     fun updateThumbPositionTimeValues(
