@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -361,19 +362,26 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     override fun showTrimLayout() {
-
+        startDuration.visibility = View.VISIBLE
+        endDurationText.visibility = View.VISIBLE
+        mTimeLineView.visibility = View.VISIBLE
+        mrangeSeekbar.visibility = View.VISIBLE
     }
 
     override fun hideTrimLayout() {
-
+        startDuration.visibility = View.GONE
+        endDurationText.visibility = View.GONE
+        mTimeLineView.visibility = View.GONE
+        mrangeSeekbar.visibility = View.GONE
     }
 
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         currentPagePostion = position
         if (mediaItem.isVideo) {
+
             setTimeLine(mediaItem)
             onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
-
+            mrangeSeekbar.initMaxWidth()
         }
     }
 
@@ -385,7 +393,8 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         this.mVideoView = video
         this.mVideoView.requestFocus()
         duration = video.duration
-        setSeekBarPosition()
+
+
     }
 
     private fun setSeekBarPosition() {

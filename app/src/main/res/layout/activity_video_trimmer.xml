@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorAccent"
-    tools:context=".VideoTrimmerActivity">
+     tools:context=".VideoTrimmerActivity">
     <androidx.appcompat.widget.AppCompatButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -33,13 +32,17 @@
 
         <com.papayacoders.customvideocropper.video_trimmer.view.TimeLineView
             android:id="@+id/timeLineView"
+            android:background="@color/black"
+            android:layout_marginStart="@dimen/_21sdp"
+            android:layout_marginEnd="@dimen/_21sdp"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
         <com.suraj854.trimmodule.widget.papayacoder.view.RangeSeekBarView
             android:id="@+id/rangeSeekBarView"
             android:layout_width="match_parent"
-
+            android:visibility="gone"
             android:layout_height="match_parent"
             app:layout_constraintTop_toTopOf="@id/timeLineView"
             tools:background="#3300ffff" />
@@ -85,7 +88,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text=":efcgc"
+            android:layout_marginEnd="@dimen/_21sdp"
             android:textColor="#fff"
             android:textSize="12sp"
 
@@ -96,7 +99,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
-            android:text="0:30"
+
+            android:layout_marginStart="@dimen/_21sdp"
             android:textColor="#fff"
 
             android:textSize="12sp" />

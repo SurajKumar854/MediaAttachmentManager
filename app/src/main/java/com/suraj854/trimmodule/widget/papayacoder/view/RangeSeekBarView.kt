@@ -32,6 +32,7 @@ import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.ColorInt
+import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.OnRangeSeekBarListener
 
 import kotlin.math.absoluteValue
@@ -69,9 +70,9 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         strokePaint.style = Paint.Style.STROKE
         strokePaint.strokeWidth =
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, context.resources.displayMetrics)
-        strokePaint.color = 0xffffffff.toInt()
+        strokePaint.color =  context.resources.getColor(R.color.colorAccent)
         edgePaint.isAntiAlias = true
-        edgePaint.color = 0xffffffff.toInt()
+        edgePaint.color =  context.resources.getColor(R.color.white)
     }
 
     @ColorInt
@@ -280,7 +281,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
 
     fun setThumbPos(index: Int, pos: Float) {
         thumbs[index].pos = pos
-        Log.e("setThumbPos",pos.toString())
+
         calculateThumbValue(index)
         // Tell the view we want a complete redraw
         invalidate()
