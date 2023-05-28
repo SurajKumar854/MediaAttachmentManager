@@ -380,7 +380,9 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         if (mediaItem.isVideo) {
 
             setTimeLine(mediaItem)
+            endPosition = mediaItem.duration.toInt()
             onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
+
             mrangeSeekbar.initMaxWidth()
         }
     }
