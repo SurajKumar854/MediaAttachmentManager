@@ -129,7 +129,7 @@ var currentMediaPage = 0
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
         item.trimFromStart = leftProgress
-        item.trimFromEnd = item.duration - rightProgress
+
 
 
     }
@@ -163,9 +163,8 @@ var currentMediaPage = 0
         val item = mediaList.get(position)
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
-        item.trimFromStart = leftProgress
-        item.trimFromEnd = item.duration - rightProgress
-        Log.e("updateThumbPositionTimeValues","$leftProgress  $rightProgress")
+
+        Log.e("updateThumbPositionTimeValues","$leftProgress  $rightProgress  aRRAY ${mediaList.toString()}")
 
 
     }

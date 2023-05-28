@@ -3,6 +3,10 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
 
     }
 }
@@ -11,7 +15,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+        maven {
+
+            url 'https://jitpack.io' }
+
+        maven {
+            url 'https://maven.google.com/'
+            name 'Google'
+        }
     }
 }
 rootProject.name = "Video"

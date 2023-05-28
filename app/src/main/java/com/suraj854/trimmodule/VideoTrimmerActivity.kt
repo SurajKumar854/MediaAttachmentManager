@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -80,7 +79,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
         mPostBtn = findViewById(R.id.mPostBtn)
         mrangeSeekbar.initMaxWidth()
-        // setMaxDurationInMs(10 * 10000)
+        setMaxDurationInMs(10 * 10000)
 
         mPostBtn.setOnClickListener {
             if (fragment.getMediaList().isEmpty()) {
@@ -101,7 +100,6 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
             }
         }
-
 
 
     }
@@ -180,7 +178,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     private fun setMaxDurationInMs(maxDurationInMs: Int) {
-        this.maxDurationInMs = 0
+
         this.maxDurationInMs = maxDurationInMs
     }
 
@@ -205,19 +203,23 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
         when (index) {
             RangeSeekBarView.ThumbType.LEFT.index -> {
-                fragment.saveLeftRangeSeekBarPosition(currentPagePostion, value * 9.45)
-                startPosition = (duration * value / 100L).toInt()
+                // fragment.saveLeftRangeSeekBarPosition(currentPagePostion, value * 9.45)
+                startPosition = (mediaItem.duration * value / 100L).toInt()
 
             }
 
             RangeSeekBarView.ThumbType.RIGHT.index -> {
-                fragment.saveRightRangeSeekBarPosition(currentPagePostion, value * 9.45)
-                endPosition = (duration * value / 100L).toInt()
+                //    fragment.saveRightRangeSeekBarPosition(currentPagePostion, value * 9.45)
+                endPosition = (mediaItem.duration * value / 100L).toInt()
             }
         }
 //        Log.d("SHUBH", "onSeekThumbs: $startPosition  $endPosition")
         // setProgressBarPosition(startPosition)
-
+        /*
+               fragment.updateThumbPositionTimeValues(
+                    currentPagePostion, startPosition.toLong(), endPosition.toLong()
+                )*/
+        Log.e("Durations",startPosition.toString())
         onRangeUpdated(startPosition, endPosition)
         seekTo(startPosition.toLong())
         timeVideo = endPosition - startPosition
@@ -230,11 +232,12 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
         startDuration.text = "${stringForTime(startTimeInMs)} $seconds "
         endDurationText.text = " ${stringForTime(endTimeInMs)} $seconds"
-        fragment.updateThumbPositionTimeValues(
+
+       /* fragment.updateThumbPositionTimeValues(
             currentPagePostion,
             startTimeInMs.toLong(),
             endTimeInMs.toLong()
-        )
+        )*/
     }
 
     private val addMediaChooserResult =
@@ -284,7 +287,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                     1.0,
                                     UnitConverter().dpToPx(385f).toDouble(),
                                     0,
-                                    10000
+                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString()))
                                 )
                             )
                         }
@@ -324,7 +327,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                 0.0,
                                 UnitConverter().dpToPx(385f).toDouble(),
                                 0,
-                                10000
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString()))
                             )
                         )
                     }
@@ -370,17 +373,17 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     override fun showTrimLayout() {
-        startDuration.visibility = View.VISIBLE
-        endDurationText.visibility = View.VISIBLE
-        mTimeLineView.visibility = View.VISIBLE
-        mrangeSeekbar.visibility = View.VISIBLE
+        /*      startDuration.visibility = View.VISIBLE
+              endDurationText.visibility = View.VISIBLE
+              mTimeLineView.visibility = View.VISIBLE
+              mrangeSeekbar.visibility = View.VISIBLE*/
     }
 
     override fun hideTrimLayout() {
-        startDuration.visibility = View.GONE
-        endDurationText.visibility = View.GONE
-        mTimeLineView.visibility = View.GONE
-        mrangeSeekbar.visibility = View.GONE
+        /* startDuration.visibility = View.GONE
+         endDurationText.visibility = View.GONE
+         mTimeLineView.visibility = View.GONE
+         mrangeSeekbar.visibility = View.GONE*/
     }
     lateinit var mediaItem: MediaItem
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
@@ -389,24 +392,46 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         this.mediaItem = mediaItem
         if (mediaItem.isVideo) {
 
-            setMaxDurationInMs(mediaItem.duration.toInt())
 
             setTimeLine(mediaItem)
-            startPosition = mediaItem.leftProgress.toInt()
-            endPosition = mediaItem.duration.toInt()
-            duration = mediaItem.duration.toInt()
-            mrangeSeekbar.setThumbPos(0, mediaItem.lastLeftThumbPosition.toFloat())
-            mrangeSeekbar.setThumbPos(1, mediaItem.lastRightThumbPosition.toFloat())
+            startPosition = 0
+            endPosition= mediaItem.duration.toInt()
+            /*   startPosition = 0
+               endPosition = MediaTypeUtils.getVideoDuration(
+                   Uri.parse(mediaItem.path)
+               ).toInt() / 2 + maxDurationInMs / 2
+
+               duration = MediaTypeUtils.getVideoDuration(
+                   Uri.parse(mediaItem.path)
+               ).toInt()
+   */
+            /*   mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
+               mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)*/
+
+            /* endPosition = MediaTypeUtils.getVideoDuration(
+                 Uri.parse(mediaItem.path)
+             ).toInt()*/
+
+
+            /* mrangeSeekbar.setThumbPos(0, mediaItem.lastLeftThumbPosition.toFloat())
+             mrangeSeekbar.setThumbPos(1, mediaItem.lastRightThumbPosition.toFloat())*/
 
 
             //    mrangeSeekbar.restoreThumbValues()*/
             Log.e(
                 "onMediaChange",
-                "   lastRightThumbPosition ${mediaItem.lastRightThumbPosition.toFloat()}   lastLeftThumbPosition ${mediaItem.lastLeftThumbPosition.toFloat()}"
+                "   lastRightThumbPosition ${mediaItem.lastRightThumbPosition.toFloat()}   lastLeftThumbPosition ${mediaItem.lastLeftThumbPosition.toFloat()}  endPosition ${
+                    MediaTypeUtils.getVideoDuration(
+                        Uri.parse(mediaItem.path.toString())
+                    )
+                } $"
             )
 
-
-            onRangeUpdated(mediaItem.leftProgress.toInt(), endPosition)
+            // lastRightThumbPosition 1347.5   lastLeftThumbPosition 1.0  endPosition 52198 $
+            onRangeUpdated(
+                mediaItem.leftProgress.toInt(),
+                mediaItem.duration.toInt()
+            )
 
         }
         //  mrangeSeekbar.initMaxWidth()

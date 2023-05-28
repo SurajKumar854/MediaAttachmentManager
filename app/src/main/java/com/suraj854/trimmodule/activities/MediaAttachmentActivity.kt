@@ -507,6 +507,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
 
         this.position = position
         this.mediaItem = mediaItem
+        
 
 
         if (mediaItem.isVideo) {
@@ -950,8 +951,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         ((mAverageMsPx * (RECYCLER_VIEW_PADDING + scrollX) / THUMB_WIDTH).toLong())
 
                     if (mRightProgressPos <= mediaItem.duration && mLeftProgressPos.toInt() != 0) {
-
-                    } else {
 
                     }
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <dimen name="progress_video_line_height">2dp</dimen>
-    <dimen name="frames_video_height">40dip</dimen>
-    <string name="back">Back</string>
-    <string name="video_shoot_tip">Drag to select the segment within %d second that you want to post！</string>
+    <dimen name="thumb_width">30dp</dimen>
+    <dimen name="thumb_height">30dp</dimen>
 
-    <string name="finish">Finish</string>
+    <dimen name="bubble_thumb_width">70dp</dimen>
+    <dimen name="bubble_thumb_height">70dp</dimen>
+
 </resources>
