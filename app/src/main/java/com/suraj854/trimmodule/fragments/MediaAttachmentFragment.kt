@@ -58,7 +58,6 @@ var currentMediaPage = 0
 
                 currentMediaPage = position
 
-                Toast.makeText(requireContext(), "$position", Toast.LENGTH_SHORT).show()
                 val mediaItem = mediaList.get(position)
 
                 if (mediaItem.isVideo) {

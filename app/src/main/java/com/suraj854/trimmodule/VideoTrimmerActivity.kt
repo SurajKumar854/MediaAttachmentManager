@@ -409,7 +409,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         if (duration >= maxDurationInMs) {
             startPosition = duration / 2 - maxDurationInMs / 2
             endPosition = duration / 2 + maxDurationInMs / 2
-            Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show()
+
             mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
             mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)
         } else {
