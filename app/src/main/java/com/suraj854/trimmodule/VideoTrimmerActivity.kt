@@ -3,7 +3,6 @@ package com.suraj854.trimmodule
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -75,6 +74,26 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         progressDialog = Dialog(this)
         progressDialog.setContentView(R.layout.dialog_loading)
         progressDialog.setCancelable(false)
+        mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
+            override fun onCreate(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+                // Do nothing
+            }
+
+            override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+                onSeekThumbs(index, value)
+            }
+
+            override fun onSeekStart(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+            }
+
+            override fun onSeekStop(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+            }
+        })
+
         mPostBtn = findViewById(R.id.mPostBtn)
 
 
@@ -98,25 +117,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
             }
         }
-        mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
-            override fun onCreate(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
-                // Do nothing
-            }
 
-            override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
-
-                onSeekThumbs(index, value)
-            }
-
-            override fun onSeekStart(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
-                // Do nothing
-            }
-
-            override fun onSeekStop(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
-                // onStopSeekThumbs()
-
-            }
-        })
 
 
     }
@@ -179,9 +180,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                     }
                 })
             } catch (e: java.lang.Exception) {
-                Toast.makeText(
-                    applicationContext, "UnSupported Media Please Try again", Toast.LENGTH_SHORT
-                ).show()
+
             }
 
 
@@ -356,10 +355,8 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
     fun setTimeLine(mediaItem: MediaItem) {
         BaseUtils.init(this)
-        mTimeLineView.setVideo(Uri.parse(mediaItem.path),mediaItem)
-
-
-        mTimeLineView.getBitmap()
+        mTimeLineView.setVideo(Uri.parse(mediaItem.path), mediaItem)
+        mTimeLineView.getBitmap(1080, 110)
 
     }
 
@@ -373,9 +370,11 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         currentPagePostion = position
+        if (mediaItem.isVideo) {
+            setTimeLine(mediaItem)
+            onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
 
-        setTimeLine(mediaItem)
-
+        }
     }
 
     override fun trimMediaItemListener(mediaItem: MediaItem) {
@@ -393,17 +392,21 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         if (duration >= maxDurationInMs) {
             startPosition = duration / 2 - maxDurationInMs / 2
             endPosition = duration / 2 + maxDurationInMs / 2
+            Toast.makeText(this, "Hello", Toast.LENGTH_SHORT).show()
             mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
             mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)
         } else {
             startPosition = 0
             endPosition = duration
+
+
         }
-        Log.d("SHUBH", "setSeekBarPosition: $startPosition  $endPosition")
+
         //  setProgressBarPosition(startPosition)
         mVideoView.seekTo(startPosition)
         timeVideo = duration
-        mrangeSeekbar.initMaxWidth()
+        /*mrangeSeekbar.initMaxWidth()*/
+
     }
 
     override fun onVideoPrepared() {
@@ -411,14 +414,11 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     override fun onTrimStarted() {
-        Toast.makeText(applicationContext, "onTrimStarted", Toast.LENGTH_SHORT).show()
 
     }
 
     override fun onFinishedTrimming(uri: Uri?) {
 
-        Toast.makeText(this, "Trimmed ", Toast.LENGTH_SHORT).show()
-        Log.e("Encodingss", uri?.path.toString())
         encodeAttachmentsRecursive(encodeIndex + 1)
         hideLoadingDialog()
     }

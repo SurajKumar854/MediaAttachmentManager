@@ -32,8 +32,6 @@ import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
-import com.otaliastudios.transcoder.Transcoder
-import com.otaliastudios.transcoder.TranscoderListener
 import com.otaliastudios.transcoder.source.TrimDataSource
 import com.otaliastudios.transcoder.source.UriDataSource
 import com.suraj854.trimmodule.R
@@ -622,23 +620,23 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
         seekBarLayout.removeAllViews()
 
         var scrollPos = 0
-      //  video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
-        video_frames_recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-            }
+        video_frames_recyclerView.addOnScrollListener(mOnScrollListener)
+        /*     video_frames_recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                     super.onScrollStateChanged(recyclerView, newState)
+                 }
 
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager =
-                    video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
-                val visibleItemCount = layoutManager.childCount
-                Log.e("visibleItemCount", visibleItemCount.toString())
+                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                     super.onScrolled(recyclerView, dx, dy)
+                     val layoutManager =
+                         video_frames_recyclerView.getLayoutManager() as LinearLayoutManager
+                     val visibleItemCount = layoutManager.childCount
+                     Log.e("visibleItemCount", visibleItemCount.toString())
 
 
-            }
-        })
-
+                 }
+             })
+     */
         mLeftProgressPos = 0
         if (duration <= MAX_SHOOT_DURATION) {
             mThumbsTotalCount = MAX_COUNT_RANGE
@@ -944,10 +942,6 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     mRangeSeekBarView.invalidate()
 
 
-
-                    Log.e(
-                        "mffLeftProgressPosmLimitbhs", "$mLeftProgressPos  $mRightProgressPos"
-                    )
                 } else {
                     isSeeking = true
 
@@ -964,9 +958,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     if (scrollPos > 10 || mLeftProgressPos > 0) {
                         dataManager = MediaManagerState.SecondScroll
                     }
-                    Log.e(
-                        "mffLeftProgressseconds$scrollPos", "$mLeftProgressPos  $mRightProgressPos"
-                    )
+
                     when (dataManager) {
                         is MediaManagerState.EMPTY -> {
 

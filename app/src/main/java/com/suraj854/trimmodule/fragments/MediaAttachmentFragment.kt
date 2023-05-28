@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import android.widget.VideoView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
@@ -50,27 +51,35 @@ var currentMediaPage = 0
         mediaAttachmentAdapter = MediaAttachmentAdapter(requireContext(), mediaList, this, this)
         mediaItemViewPager2.adapter = mediaAttachmentAdapter
         mediaItemViewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
+
+
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
-                Log.e("registerOnPageChangeCallback-onPageSelected","$position")
+
                 currentMediaPage = position
 
+                Toast.makeText(requireContext(), "$position", Toast.LENGTH_SHORT).show()
+                val mediaItem = mediaList.get(position)
 
-                    val mediaItem = mediaList.get(position)
+                if (mediaItem.isVideo) {
+                    onTrimButtonClick()
+                    onMediaItemListener(mediaItem)
 
-                    if (mediaItem.isVideo) {
-                        onTrimButtonClick()
-                        onMediaItemListener(mediaItem)
-
-                    } else {
-                        onNonVideoItemClick()
-                    }
-
-                    mediaPlackHandler(position, mediaItem)
-                    onScrollPosition(position, mediaItem)
+                } else {
+                    onNonVideoItemClick()
                 }
 
 
+                onScrollPosition(position, mediaItem)
+            }
+
+
+            override fun onPageScrollStateChanged(state: Int) {
+                super.onPageScrollStateChanged(state)
+
+
+                mediaPlackHandler(state, mediaList.get(state))
+            }
 
         })
 
@@ -123,8 +132,6 @@ var currentMediaPage = 0
         item.rightProgress = rightProgress
         item.trimFromStart = leftProgress
         item.trimFromEnd = item.duration - rightProgress
-        Log.e("mdurationFix a-"," left $leftProgress / $rightProgress ")
-
 
 
     }

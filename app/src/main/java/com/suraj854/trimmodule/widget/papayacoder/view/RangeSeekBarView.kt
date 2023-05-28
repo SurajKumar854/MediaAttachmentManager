@@ -27,6 +27,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -86,9 +87,13 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         ).toInt().coerceAtLeast(1)
 
     fun initMaxWidth() {
+        thumbs[ThumbType.RIGHT.index].pos = 1010.0f
+        thumbs[ThumbType.LEFT.index].pos = 0.0f
+
         maxWidth = thumbs[ThumbType.RIGHT.index].pos - thumbs[ThumbType.LEFT.index].pos
         onSeekStop(this, ThumbType.LEFT.index, thumbs[ThumbType.LEFT.index].value)
         onSeekStop(this, ThumbType.RIGHT.index, thumbs[ThumbType.RIGHT.index].value)
+        Log.e("Sirars", "${thumbs[ThumbType.RIGHT.index].pos} /${thumbs[ThumbType.LEFT.index].pos}")
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -100,6 +105,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
             for ((index, thumb) in thumbs.withIndex()) {
                 thumb.value = scaleRangeMax * index
                 thumb.pos = pixelRangeMax * index
+                Log.e("auAAFJJHSALKJAL", "${pixelRangeMax * index}")
             }
             // Fire listener callback
             onCreate(this, currentThumb, getThumbValue(currentThumb))
@@ -272,8 +278,9 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         invalidate()
     }
 
-    private fun setThumbPos(index: Int, pos: Float) {
+    fun setThumbPos(index: Int, pos: Float) {
         thumbs[index].pos = pos
+        Log.e("setThumbPos",pos.toString())
         calculateThumbValue(index)
         // Tell the view we want a complete redraw
         invalidate()
