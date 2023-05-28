@@ -230,6 +230,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         // setProgressBarPosition(startPosition)
 
         onRangeUpdated(startPosition, endPosition)
+        seekTo(startPosition.toLong())
         timeVideo = endPosition - startPosition
     }
 
@@ -380,9 +381,13 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         if (mediaItem.isVideo) {
 
             setTimeLine(mediaItem)
+            startPosition = mediaItem.leftProgress.toInt()
             endPosition = mediaItem.duration.toInt()
-            onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
 
+            /* mrangeSeekbar.setThumbValue(1, 500f)
+             mrangeSeekbar.restoreThumbValues()*/
+
+            onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
             mrangeSeekbar.initMaxWidth()
         }
     }

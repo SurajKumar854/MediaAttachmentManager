@@ -97,9 +97,20 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         Log.e("Sirars", "${thumbs[ThumbType.RIGHT.index].pos} /${thumbs[ThumbType.LEFT.index].pos}")
     }
 
+    fun restoreThumbValues() {
+        thumbs[ThumbType.RIGHT.index].pos = 500.0f
+        thumbs[ThumbType.LEFT.index].pos = 300.0f
+
+        maxWidth = thumbs[ThumbType.RIGHT.index].pos - thumbs[ThumbType.LEFT.index].pos
+        onSeekStop(this, ThumbType.LEFT.index, thumbs[ThumbType.LEFT.index].value)
+        onSeekStop(this, ThumbType.RIGHT.index, thumbs[ThumbType.RIGHT.index].value)
+        invalidate()
+        Log.e("Sirars", "${thumbs[ThumbType.RIGHT.index].pos} /${thumbs[ThumbType.LEFT.index].pos}")
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        viewWidth=measuredWidth
+        viewWidth = measuredWidth
         pixelRangeMin = 0f
         pixelRangeMax = (viewWidth - thumbWidth).toFloat()
         if (firstRun) {
