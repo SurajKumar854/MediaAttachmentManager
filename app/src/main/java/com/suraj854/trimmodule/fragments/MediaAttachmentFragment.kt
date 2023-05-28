@@ -78,7 +78,7 @@ var currentMediaPage = 0
                 super.onPageScrollStateChanged(state)
 
 
-                mediaPlackHandler(state, mediaList.get(state))
+
             }
 
         })
