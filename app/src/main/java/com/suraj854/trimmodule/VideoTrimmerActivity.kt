@@ -160,8 +160,9 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
 
                 mVideoView.pause()
-                Log.e("sfsfsfs", encodeIndex.toString())
+
                 videoTrimmingListener!!.onTrimStarted()
+                Log.e("sfasfsafasaf","${uploadMediaAttachment.trimFromStart} / ${uploadMediaAttachment.trimFromEnd}")
                 BackgroundExecutor.execute(object : BackgroundExecutor.Task(null, 100L, null) {
                     override fun execute() {
                         try {
@@ -169,9 +170,9 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                 this@VideoTrimmerActivity,
                                 Uri.parse(uploadMediaAttachment.path),
                                 dstFile!!,
-                                startPosition.toLong(),
-                                endPosition.toLong(),
-                                duration.toLong(),
+                                uploadMediaAttachment.leftProgress,
+                                uploadMediaAttachment.rightProgress,
+                                uploadMediaAttachment.duration,
                                 videoTrimmingListener!!
                             )
                         } catch (e: Throwable) {
