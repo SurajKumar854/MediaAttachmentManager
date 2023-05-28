@@ -34,6 +34,7 @@ import android.view.View
 import androidx.annotation.ColorInt
 import com.suraj854.trimmodule.R
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.OnRangeSeekBarListener
+import com.suraj854.videotrimmerview.utilis.UnitConverter
 
 import kotlin.math.absoluteValue
 
@@ -88,7 +89,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         ).toInt().coerceAtLeast(1)
 
     fun initMaxWidth() {
-        thumbs[ThumbType.RIGHT.index].pos = 1010.0f
+        thumbs[ThumbType.RIGHT.index].pos = UnitConverter().dpToPx(385f)
         thumbs[ThumbType.LEFT.index].pos = 0.0f
 
         maxWidth = thumbs[ThumbType.RIGHT.index].pos - thumbs[ThumbType.LEFT.index].pos
@@ -117,7 +118,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
             for ((index, thumb) in thumbs.withIndex()) {
                 thumb.value = scaleRangeMax * index
                 thumb.pos = pixelRangeMax * index
-                Log.e("auAAFJJHSALKJAL", "${pixelRangeMax * index}")
+
             }
             // Fire listener callback
             onCreate(this, currentThumb, getThumbValue(currentThumb))

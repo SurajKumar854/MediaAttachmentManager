@@ -75,8 +75,16 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         progressDialog = Dialog(this)
         progressDialog.setContentView(R.layout.dialog_loading)
         progressDialog.setCancelable(false)
+
+
+        mPostBtn = findViewById(R.id.mPostBtn)
+        setMaxDurationInMs(10 * 10000)
         mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
-            override fun onCreate(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+            override fun onCreate(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
 
                 // Do nothing
             }
@@ -86,18 +94,22 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                 onSeekThumbs(index, value)
             }
 
-            override fun onSeekStart(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+            override fun onSeekStart(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
 
             }
 
-            override fun onSeekStop(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+            override fun onSeekStop(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
 
             }
         })
-
-        mPostBtn = findViewById(R.id.mPostBtn)
-
-
 
         mPostBtn.setOnClickListener {
             if (fragment.getMediaList().isEmpty()) {
@@ -197,6 +209,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     private fun setMaxDurationInMs(maxDurationInMs: Int) {
+        this.maxDurationInMs = 0
         this.maxDurationInMs = maxDurationInMs
     }
 
@@ -212,18 +225,22 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         textMessage.text = message // Update the text message as needed
     }
 
+
     private fun hideLoadingDialog() {
         progressDialog.dismiss()
     }
 
     private fun onSeekThumbs(index: Int, value: Float) {
+        Toast.makeText(this, "${value.toDouble()}", Toast.LENGTH_SHORT).show()
         when (index) {
             RangeSeekBarView.ThumbType.LEFT.index -> {
+                fragment.saveLeftRangeSeekBarPosition(currentPagePostion, value.toDouble())
                 startPosition = (duration * value / 100L).toInt()
 
             }
 
             RangeSeekBarView.ThumbType.RIGHT.index -> {
+                fragment.saveRightRangeSeekBarPosition(currentPagePostion, value.toDouble())
                 endPosition = (duration * value / 100L).toInt()
             }
         }
@@ -284,8 +301,8 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                     0,
                                     0,
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
-                                    0.0,
                                     1.0,
+                                    1010.00,
                                     0,
                                     10000
                                 )
@@ -316,7 +333,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                 0,
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())) - 10000,
                                 0.0,
-                                1.0,
+                                1010.00,
                                 0,
                                 10000
                             )
@@ -376,21 +393,26 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         mTimeLineView.visibility = View.GONE
         mrangeSeekbar.visibility = View.GONE
     }
-
+    lateinit var mediaItem: MediaItem
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         currentPagePostion = position
+
+        this.mediaItem = mediaItem
         if (mediaItem.isVideo) {
+            //  setMaxDurationInMs(10 * 10000)
 
             setTimeLine(mediaItem)
             startPosition = mediaItem.leftProgress.toInt()
             endPosition = mediaItem.duration.toInt()
 
-            /* mrangeSeekbar.setThumbValue(1, 500f)
-             mrangeSeekbar.restoreThumbValues()*/
+
+            //    mrangeSeekbar.restoreThumbValues()*/
+
 
             onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
-            mrangeSeekbar.initMaxWidth()
+
         }
+        mrangeSeekbar.initMaxWidth()
     }
 
     override fun trimMediaItemListener(mediaItem: MediaItem) {
@@ -401,8 +423,16 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         this.mVideoView = video
         this.mVideoView.requestFocus()
         duration = video.duration
+        //  mrangeSeekbar.setThumbValue(0, 30f)
+        if (this.mediaItem != null) {
+            /* Toast.makeText(
+                 this,
+                 "${this.mediaItem.lastLeftThumbPosition.toFloat()}",
+                 Toast.LENGTH_SHORT
+             ).show()*/
 
 
+        }
     }
 
     private fun setSeekBarPosition() {
