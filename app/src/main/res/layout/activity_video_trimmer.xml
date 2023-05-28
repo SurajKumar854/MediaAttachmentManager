@@ -89,7 +89,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_marginEnd="@dimen/_21sdp"
-            android:textColor="#fff"
+            android:textColor="@color/black"
             android:textSize="12sp"
 
             />
@@ -101,7 +101,7 @@
             android:layout_gravity="start"
 
             android:layout_marginStart="@dimen/_21sdp"
-            android:textColor="#fff"
+            android:textColor="@color/black"
 
             android:textSize="12sp" />
 
