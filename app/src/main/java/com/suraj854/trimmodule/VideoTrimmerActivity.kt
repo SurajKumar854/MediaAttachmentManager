@@ -29,6 +29,7 @@ import com.suraj854.trimmodule.widget.papayacoder.interfaces.OnRangeSeekBarListe
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.VideoTrimmingListener
 import com.suraj854.trimmodule.widget.papayacoder.view.RangeSeekBarView
 import com.suraj854.videotrimmerview.utilis.BaseUtils
+import com.suraj854.videotrimmerview.utilis.UnitConverter
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -80,38 +81,6 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         mPostBtn = findViewById(R.id.mPostBtn)
         mrangeSeekbar.initMaxWidth()
         // setMaxDurationInMs(10 * 10000)
-        mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
-            override fun onCreate(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
-            ) {
-
-                // Do nothing
-            }
-
-            override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
-
-                Log.e("onSeeksss", "value $index  float ${value * 9.45}")
-                onSeekThumbs(index, value)
-            }
-
-            override fun onSeekStart(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
-            ) {
-
-            }
-
-            override fun onSeekStop(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
-            ) {
-
-            }
-        })
 
         mPostBtn.setOnClickListener {
             if (fragment.getMediaList().isEmpty()) {
@@ -290,7 +259,16 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
                             fragment.addMediaItem(
                                 MediaItem(
-                                    uri.uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
+                                    uri.uri.toString(),
+                                    0,
+                                    false,
+                                    0,
+                                    0,
+                                    10000,
+                                    0.0,
+                                    UnitConverter().dpToPx(385f).toDouble(),
+                                    0,
+                                    10000
                                 )
                             )
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
@@ -304,7 +282,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                     0,
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
                                     1.0,
-                                    1010.00,
+                                    UnitConverter().dpToPx(385f).toDouble(),
                                     0,
                                     10000
                                 )
@@ -321,7 +299,16 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
                         fragment.addMediaItem(
                             MediaItem(
-                                uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
+                                uri.toString(),
+                                0,
+                                false,
+                                0,
+                                0,
+                                10000,
+                                0.0,
+                                UnitConverter().dpToPx(385f).toDouble(),
+                                0,
+                                10000
                             )
                         )
                     } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
@@ -335,7 +322,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                 0,
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())) - 10000,
                                 0.0,
-                                1010.00,
+                                UnitConverter().dpToPx(385f).toDouble(),
                                 0,
                                 10000
                             )
@@ -401,17 +388,25 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
         this.mediaItem = mediaItem
         if (mediaItem.isVideo) {
+
             setMaxDurationInMs(mediaItem.duration.toInt())
 
             setTimeLine(mediaItem)
             startPosition = mediaItem.leftProgress.toInt()
             endPosition = mediaItem.duration.toInt()
+            duration = mediaItem.duration.toInt()
+            mrangeSeekbar.setThumbPos(0, mediaItem.lastLeftThumbPosition.toFloat())
+            mrangeSeekbar.setThumbPos(1, mediaItem.lastRightThumbPosition.toFloat())
 
 
             //    mrangeSeekbar.restoreThumbValues()*/
+            Log.e(
+                "onMediaChange",
+                "   lastRightThumbPosition ${mediaItem.lastRightThumbPosition.toFloat()}   lastLeftThumbPosition ${mediaItem.lastLeftThumbPosition.toFloat()}"
+            )
 
 
-            onRangeUpdated(mediaItem.leftProgress.toInt(), mediaItem.duration.toInt())
+            onRangeUpdated(mediaItem.leftProgress.toInt(), endPosition)
 
         }
         //  mrangeSeekbar.initMaxWidth()
@@ -424,35 +419,62 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     override fun trimVideoVideoListener(video: VideoView) {
         this.mVideoView = video
         this.mVideoView.requestFocus()
-        duration = video.duration
-
-        if (this.mediaItem != null) {
 
 
-            mrangeSeekbar.setThumbPos(0, mediaItem.lastLeftThumbPosition.toFloat())
-            mrangeSeekbar.setThumbPos(1, mediaItem.lastRightThumbPosition.toFloat())
-        }
+        mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
+            override fun onCreate(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
+
+                // Do nothing
+            }
+
+            override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+                Log.e("onSeeksss", "value $index  float ${value * 9.45}")
+                onSeekThumbs(index, value)
+            }
+
+            override fun onSeekStart(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
+
+            }
+
+            override fun onSeekStop(
+                rangeSeekBarView: RangeSeekBarView,
+                index: Int,
+                value: Float
+            ) {
+
+            }
+        })
+
 
     }
 
     private fun setSeekBarPosition() {
-        if (duration >= maxDurationInMs) {
-            startPosition = duration / 2 - maxDurationInMs / 2
-            endPosition = duration / 2 + maxDurationInMs / 2
+        /*  if (duration >= maxDurationInMs) {
+              startPosition = duration / 2 - maxDurationInMs / 2
+              endPosition = duration / 2 + maxDurationInMs / 2
 
-            mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
-            mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)
-        } else {
-            startPosition = 0
-            endPosition = duration
+              mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
+              mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)
+          } else {
+              startPosition = 0
+              endPosition = duration
 
 
-        }
+          }
 
-        //  setProgressBarPosition(startPosition)
-        mVideoView.seekTo(startPosition)
-        timeVideo = duration
-        /*mrangeSeekbar.initMaxWidth()*/
+          //  setProgressBarPosition(startPosition)
+          mVideoView.seekTo(startPosition)
+          timeVideo = duration
+          *//*mrangeSeekbar.initMaxWidth()*/
 
     }
 

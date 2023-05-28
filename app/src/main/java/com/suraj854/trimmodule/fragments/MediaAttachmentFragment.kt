@@ -141,7 +141,7 @@ var currentMediaPage = 0
     ) {
         val item = mediaList.get(position)
         item.lastRightThumbPosition = right
-
+        Log.e("saveRightRangeSeekBarPosition", item.lastRightThumbPosition.toString())
     }
 
     fun saveLeftRangeSeekBarPosition(
@@ -149,9 +149,9 @@ var currentMediaPage = 0
         left: Double
     ) {
         val item = mediaList.get(position)
-        item.lastLeftThumbPosition = left
+        item.lastLeftThumbPosition = left * 9.45
 
-        Log.e("SAVESSSS",item.lastLeftThumbPosition.toString() )
+        Log.e("saveLeftRangeSeekBarPosition", item.lastLeftThumbPosition.toString())
 
     }
 

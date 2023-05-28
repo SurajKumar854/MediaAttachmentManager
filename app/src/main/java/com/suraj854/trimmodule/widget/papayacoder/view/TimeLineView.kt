@@ -114,7 +114,7 @@ open class TimeLineView @JvmOverloads constructor(context: Context, attrs: Attri
         val thumbSize = VideoTrimmerUtil.THUMB_HEIGHT
         for (bitmap in bitmapList) {
 
-            if (bitmap != null) Log.e("Surrasfsa", "Drawing")
+            if (bitmap != null)
             if (bitmap != null) {
                 canvas.drawBitmap(bitmap, x.toFloat(), 0f, null)
             }
