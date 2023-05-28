@@ -156,7 +156,7 @@ var currentMediaPage = 0
 
 
     fun getMediaList(): List<MediaItem> {
-        Log.e("asfsfasfa",mediaList.toString())
+
         return mediaList
     }
 

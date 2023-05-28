@@ -28,10 +28,12 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:hardwareAccelerated="false"
         android:theme="@style/Theme.Video"
         tools:targetApi="31">
         <activity
             android:name=".VideoTrimmerActivity"
+            android:hardwareAccelerated="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

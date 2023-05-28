@@ -3,6 +3,7 @@ package com.suraj854.trimmodule
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -21,11 +22,13 @@ import com.suraj854.trimmodule.fragments.MediaAttachmentFragment
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.models.MediaItem
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
+import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.widget.papayacoder.BackgroundExecutor
 import com.suraj854.trimmodule.widget.papayacoder.TrimVideoUtils
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.OnRangeSeekBarListener
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.VideoTrimmingListener
 import com.suraj854.trimmodule.widget.papayacoder.view.RangeSeekBarView
+import com.suraj854.videotrimmerview.utilis.BaseUtils
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -59,7 +62,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, fragment).commit()
         parentFolder = getExternalFilesDir(null)!!
         parentFolder!!.mkdirs()
-
+        VideoTrimmerUtil.initialize(this)
 
         mTimeLineView = findViewById(R.id.timeLineView)
         mrangeSeekbar = findViewById(R.id.rangeSeekBarView)
@@ -352,8 +355,11 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     fun setTimeLine(mediaItem: MediaItem) {
-        mTimeLineView.setVideo(Uri.parse(mediaItem.path))
-        mTimeLineView.getBitmap(1080, 110)
+        BaseUtils.init(this)
+        mTimeLineView.setVideo(Uri.parse(mediaItem.path),mediaItem)
+
+
+        mTimeLineView.getBitmap()
 
     }
 
