@@ -2,7 +2,6 @@ package com.suraj854.trimmodule.adapters
 
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -11,19 +10,19 @@ import android.widget.ImageView
 import android.widget.VideoView
 import androidx.recyclerview.widget.RecyclerView
 import com.suraj854.trimmodule.R
-import com.suraj854.trimmodule.interfaces.MediaItemClickListener
-import com.suraj854.trimmodule.interfaces.VideoPreparedListener
-import com.suraj854.trimmodule.models.MediaItem
+import com.suraj854.trimmodule.VideoTrimmerActivity
+import com.suraj854.trimmodule.room.dao.MediaItemEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 class MediaAttachmentAdapter(
     private val context: Context,
-    private val mediaList: List<MediaItem>,
-    private val mediaItemClickListener: MediaItemClickListener,
-    private val videoPreparedListener: VideoPreparedListener
+    private var mediaList: MutableList<MediaItemEntity>,
+    private val mediaItemClickListener: VideoTrimmerActivity,
+    private val videoPreparedListener: VideoTrimmerActivity
 ) :
     RecyclerView.Adapter<MediaAttachmentAdapter.MediaAttachmentViewHolder>() {
 
@@ -41,9 +40,18 @@ class MediaAttachmentAdapter(
         holder: MediaAttachmentAdapter.MediaAttachmentViewHolder,
         position: Int
     ) {
+        this.holder = holder
 
         val mediaItem = mediaList.get(position)
-         holder.bind(mediaItem)
+        holder.bind(mediaItem)
+    }
+
+    lateinit var holder: MediaAttachmentViewHolder
+    fun seekTo(ms: Long) {
+
+        holder.mediaItemVideoView.seekTo(ms.toInt())
+
+        notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int {
@@ -71,18 +79,9 @@ class MediaAttachmentAdapter(
         init {
 
 
-            mediaItemVideoView.setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT)
-                CoroutineScope(Dispatchers.Main).launch {
-                    videoPreparedListener.onVideoPrepared(mediaItemVideoView)
-                }
-
-
-            }
-
         }
 
-        fun bind(mediaItem: MediaItem) {
+        fun bind(mediaItem: MediaItemEntity) {
 
             if (mediaItem.isVideo) {
 
@@ -91,9 +90,16 @@ class MediaAttachmentAdapter(
                 mediaItemVideoPlayBtnView.visibility = View.VISIBLE
                 mediaItemVideoView.setVideoURI(Uri.parse(mediaItem.path))
                 mediaItemVideoView.seekTo(1 + mediaItem.leftProgress.toInt())
+
                 mediaItemVideoPlayBtnView.setOnClickListener {
                     if (!mediaItemVideoView.isPlaying) {
                         mediaItemVideoView.start()
+                      /*  CoroutineScope(Dispatchers.Main).launch {
+                            delay(mediaItem.rightProgress)
+                            mediaItemVideoView.pause()
+                            mediaItemVideoView.seekTo(mediaItem.rightProgress.toInt())
+                        }
+                      */
                         mediaItemVideoPlayBtnView.setImageResource(R.drawable.ic_video_pause_black)
 
                     } else {

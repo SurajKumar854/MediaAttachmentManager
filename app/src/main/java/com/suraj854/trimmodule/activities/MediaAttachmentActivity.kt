@@ -124,14 +124,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                         if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                             // Process as an image
 
-                            fragment.addMediaItem(
+                            /*fragment.addMediaItem(
                                 MediaItem(
                                     uri.uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
                                 )
-                            )
+                            )*/
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                             // Process as a video
-                            fragment.addMediaItem(
+                         /*   fragment.addMediaItem(
                                 MediaItem(
                                     uri.uri.toString(),
                                     MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
@@ -141,7 +141,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                     0.0,
                                     1.0, 0, 10000
                                 )
-                            )
+                            )*/
                         }
 
                     }
@@ -152,14 +152,14 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                     if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                         // Process as an image
 
-                        fragment.addMediaItem(
+                    /*    fragment.addMediaItem(
                             MediaItem(
                                 uri.toString(), 0, false, 0, 0, 10000, 0.0, 1.0, 0, 10000
                             )
-                        )
+                        )*/
                     } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                         // Process as a video
-                        fragment.addMediaItem(
+                      /*  fragment.addMediaItem(
                             MediaItem(
                                 uri.toString(),
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
@@ -169,7 +169,7 @@ class MediaAttachmentActivity : AppCompatActivity(), TrimLayoutListener {
                                 0.0,
                                 1.0, 0, 10000
                             )
-                        )
+                        )*/
                     }
                 }
 

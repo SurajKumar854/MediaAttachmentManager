@@ -5,30 +5,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
      tools:context=".VideoTrimmerActivity">
+
     <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/mPostBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:id="@+id/mPostBtn"
-        android:layout_marginBottom="40dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="180dp"
         android:text="@string/post"
-        app:layout_constraintBottom_toTopOf="@+id/fragmentContainer"
+
         app:layout_constraintStart_toStartOf="parent" />
 
-    <FrameLayout
-        android:id="@+id/fragmentContainer"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/mediaAttachmentVP"
         android:layout_width="match_parent"
-        android:layout_height="240dp"
+        android:layout_height="200dp"
+
+
+        android:layout_marginStart="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.217" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mPostBtn"
+        app:layout_constraintVertical_bias="0.113" />
 
     <FrameLayout
         android:id="@+id/trimmingContainer"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        app:layout_constraintTop_toBottomOf="@+id/fragmentContainer">
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@+id/mediaAttachmentVP">
 
         <com.papayacoders.customvideocropper.video_trimmer.view.TimeLineView
             android:id="@+id/timeLineView"

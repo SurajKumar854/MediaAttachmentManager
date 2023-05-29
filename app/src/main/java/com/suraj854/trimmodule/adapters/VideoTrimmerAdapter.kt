@@ -15,11 +15,7 @@ import com.suraj854.trimmodule.R
 class VideoTrimmerAdapter(private val context: Context) :
     RecyclerView.Adapter<VideoTrimmerAdapter.TrimmerViewHolder>() {
     private val mBitmaps: MutableList<Bitmap> = ArrayList()
-    private val mInflater: LayoutInflater
-
-    init {
-        mInflater = LayoutInflater.from(context)
-    }
+    private val mInflater: LayoutInflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrimmerViewHolder {
         return TrimmerViewHolder(mInflater.inflate(R.layout.video_thumb_item_layout, parent, false))

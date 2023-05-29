@@ -10,17 +10,12 @@ import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import com.papayacoders.customvideocropper.video_trimmer.utils.UiThreadExecutor
-import com.suraj854.trimmodule.models.MediaItem
+import com.suraj854.trimmodule.room.dao.MediaItemEntity
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
 import com.suraj854.trimmodule.widget.papayacoder.BackgroundExecutor
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 
 
 open class TimeLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int = 0) :
@@ -163,7 +158,8 @@ open class TimeLineView @JvmOverloads constructor(context: Context, attrs: Attri
                         mediaMetadataRetriever.release()
                         returnBitmaps(thumbnailList)
                     } catch (e: Throwable) {
-                        Thread.getDefaultUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e)
+                        Thread.getDefaultUncaughtExceptionHandler()
+                            .uncaughtException(Thread.currentThread(), e)
                     }
 
                 }
@@ -173,8 +169,8 @@ open class TimeLineView @JvmOverloads constructor(context: Context, attrs: Attri
         }
     }
 
-    lateinit var mediaItem: MediaItem
-    fun setVideo(data: Uri, mediaItem: MediaItem) {
+    lateinit var mediaItem: MediaItemEntity
+    fun setVideo(data: Uri, mediaItem: MediaItemEntity) {
 
         videoUri = data
         this.mediaItem = mediaItem

@@ -18,12 +18,14 @@ import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.interfaces.VideoPreparedListener
 import com.suraj854.trimmodule.interfaces.ViewPager2Listener
 import com.suraj854.trimmodule.models.MediaItem
+import com.suraj854.trimmodule.room.AppDatabase
+import com.suraj854.trimmodule.room.dao.MediaItemEntity
 
 class MediaAttachmentFragment : Fragment(), MediaItemClickListener, VideoPreparedListener,
     ViewPager2Listener {
     private lateinit var mediaItemViewPager2: ViewPager2
     private lateinit var mediaAttachmentAdapter: MediaAttachmentAdapter
-    private var mediaList = mutableListOf<MediaItem>()
+    private var mediaList = mutableListOf<MediaItemEntity>()
     private var trimLayoutListener: TrimLayoutListener? = null // TrimLayoutListener reference
 
 
@@ -46,8 +48,11 @@ var currentMediaPage = 0
         val item = inflater.inflate(
             R.layout.media_attachment_fragment, container, false
         )
+        mediaList =
+            AppDatabase.getAppDataBase(requireContext())?.mediaAttachmentDao()
+                ?.getMediaAttachments() as MutableList<MediaItemEntity>
         mediaItemViewPager2 = item.findViewById(R.id.mediaAttachmentVP)
-        mediaAttachmentAdapter = MediaAttachmentAdapter(requireContext(), mediaList, this, this)
+    /*    mediaAttachmentAdapter = MediaAttachmentAdapter(requireContext(), mediaList, this, this)*/
         mediaItemViewPager2.adapter = mediaAttachmentAdapter
         mediaItemViewPager2.registerOnPageChangeCallback(object : OnPageChangeCallback() {
 
@@ -61,14 +66,14 @@ var currentMediaPage = 0
 
                 if (mediaItem.isVideo) {
                     onTrimButtonClick()
-                    onMediaItemListener(mediaItem)
-
+                  /*  onMediaItemListener(mediaItem)
+*/
                 } else {
                     onNonVideoItemClick()
                 }
 
 
-                onScrollPosition(position, mediaItem)
+    /*            onScrollPosition(position, mediaItem)*/
             }
 
 
@@ -103,14 +108,14 @@ var currentMediaPage = 0
 
     }
 
-    fun addMediaItem(item: MediaItem) {
+    fun addMediaItem(item: MediaItemEntity) {
         mediaList.add(item)
         mediaAttachmentAdapter.notifyDataSetChanged()
 
 
     }
 
-    fun getMediaItem(position: Int): MediaItem {
+    fun getMediaItem(position: Int): MediaItemEntity {
         return mediaList.get(position)
 
 
@@ -123,12 +128,12 @@ var currentMediaPage = 0
         leftProgress: Long,
         rightProgress: Long
     ) {
-        val item = mediaList.get(position)
+      /*  val item = mediaList.get(position)
         item.lastLeftThumbPosition = left
         item.lastRightThumbPosition = right
         item.leftProgress = leftProgress
         item.rightProgress = rightProgress
-        item.trimFromStart = leftProgress
+        item.trimFromStart = leftProgress*/
 
 
 
@@ -139,19 +144,19 @@ var currentMediaPage = 0
 
         right: Double
     ) {
-        val item = mediaList.get(position)
+     /*   val item = mediaList.get(position)
         item.lastRightThumbPosition = right
-        Log.e("saveRightRangeSeekBarPosition", item.lastRightThumbPosition.toString())
+        Log.e("saveRightRangeSeekBarPosition", item.lastRightThumbPosition.toString())*/
     }
 
     fun saveLeftRangeSeekBarPosition(
         position: Int,
         left: Double
     ) {
-        val item = mediaList.get(position)
+       /* val item = mediaList.get(position)
         item.lastLeftThumbPosition = left * 9.45
 
-        Log.e("saveLeftRangeSeekBarPosition", item.lastLeftThumbPosition.toString())
+        Log.e("saveLeftRangeSeekBarPosition", item.lastLeftThumbPosition.toString())*/
 
     }
 
@@ -174,14 +179,14 @@ var currentMediaPage = 0
         position: Int,
         frameIndex: Int,
     ) {
-        var mpostion = position
+    /*    var mpostion = position
         val item = mediaList.get(mpostion)
-        item.frameIndex = frameIndex
+        item.frameIndex = frameIndex*/
 
     }
 
 
-    fun getMediaList(): List<MediaItem> {
+    fun getMediaList(): List<MediaItemEntity> {
 
         return mediaList
     }

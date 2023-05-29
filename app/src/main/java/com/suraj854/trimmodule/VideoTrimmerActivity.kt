@@ -1,11 +1,13 @@
 package com.suraj854.trimmodule
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -13,15 +15,19 @@ import android.widget.Toast
 import android.widget.VideoView
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.otaliastudios.transcoder.source.TrimDataSource
+import androidx.lifecycle.coroutineScope
+import androidx.viewpager2.widget.ViewPager2
 import com.otaliastudios.transcoder.source.UriDataSource
 import com.papayacoders.customvideocropper.video_trimmer.view.TimeLineView
-import com.suraj854.trimmodule.fragments.MediaAttachmentFragment
+import com.suraj854.trimmodule.adapters.MediaAttachmentAdapter
 import com.suraj854.trimmodule.interfaces.TrimLayoutListener
 import com.suraj854.trimmodule.models.MediaItem
+import com.suraj854.trimmodule.room.dao.MediaItemEntity
 import com.suraj854.trimmodule.utilis.MediaTypeUtils
 import com.suraj854.trimmodule.utilis.VideoTrimmerUtil
+import com.suraj854.trimmodule.viewmodels.MediaAttachmentViewModel
 import com.suraj854.trimmodule.widget.papayacoder.BackgroundExecutor
 import com.suraj854.trimmodule.widget.papayacoder.TrimVideoUtils
 import com.suraj854.trimmodule.widget.papayacoder.interfaces.OnRangeSeekBarListener
@@ -29,22 +35,35 @@ import com.suraj854.trimmodule.widget.papayacoder.interfaces.VideoTrimmingListen
 import com.suraj854.trimmodule.widget.papayacoder.view.RangeSeekBarView
 import com.suraj854.videotrimmerview.utilis.BaseUtils
 import com.suraj854.videotrimmerview.utilis.UnitConverter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+
+@AndroidEntryPoint
 class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimmingListener {
+
+    private val mediaAttachmentViewModel: MediaAttachmentViewModel by viewModels()
     lateinit var mrangeSeekbar: RangeSeekBarView
     lateinit var mTimeLineView: TimeLineView
     lateinit var startDuration: TextView
     lateinit var endDurationText: TextView
-    lateinit var fragmentContainer: FrameLayout
-    private val fragment: MediaAttachmentFragment = MediaAttachmentFragment()
+    lateinit var trimmingContainer: FrameLayout
+    private lateinit var timeLineTextContainer: FrameLayout
+    private lateinit var mediaItemViewPager2: ViewPager2
+    private lateinit var mediaAttachmentAdapter: MediaAttachmentAdapter
+    private var mediaList = mutableListOf<MediaItemEntity>()
     lateinit var addMediaBtn: Button
     lateinit var mVideoView: VideoView
     private var timeVideo = 0
     private lateinit var trimTimeRangeTextView: TextView
+
     private var maxDurationInMs: Int = 0
     private var startPosition = 0
     private var endPosition = 0
@@ -53,24 +72,87 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     private lateinit var progressDialog: Dialog
     private var dstFile: File? = null
     private var currentPagePostion = 0
-    var parentFolder : File? = null
+    var parentFolder: File? = null
+    private var mediaItemJob: Job? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_trimmer)
         MediaTypeUtils.initialize(applicationContext)
-        fragmentContainer = findViewById(R.id.fragmentContainer)
-        supportFragmentManager.beginTransaction().replace(R.id.fragmentContainer, fragment).commit()
+
         parentFolder = getExternalFilesDir(null)!!
         parentFolder!!.mkdirs()
         VideoTrimmerUtil.initialize(this)
+
+        mediaItemViewPager2 = findViewById(R.id.mediaAttachmentVP)
+        mediaAttachmentAdapter = MediaAttachmentAdapter(this, mediaList, this, this)
+        mediaItemViewPager2.adapter = mediaAttachmentAdapter
+        trimmingContainer = findViewById(R.id.trimmingContainer)
+        timeLineTextContainer = findViewById(R.id.timeLineTextContainer)
+        mediaItemViewPager2.registerOnPageChangeCallback(object :
+            ViewPager2.OnPageChangeCallback() {
+
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                Toast.makeText(this@VideoTrimmerActivity, "$position", Toast.LENGTH_SHORT).show()
+
+                mediaItemJob = CoroutineScope(Dispatchers.Default).launch {
+                    mediaAttachmentViewModel.getMediaItem(position).collect {
+
+                        mediaItem = it
+
+
+                        this@VideoTrimmerActivity.runOnUiThread(java.lang.Runnable {
+
+                            if (it.isVideo) {
+                                trimmingContainer.visibility = View.VISIBLE
+                                timeLineTextContainer.visibility = View.VISIBLE
+                                setTimeLine(it)
+
+                                mrangeSeekbar.setThumbPos(0, it.lastLeftThumbPosition)
+                                mrangeSeekbar.setThumbPos(1, it.lastRightThumbPosition)
+
+                                onRangeUpdated(
+                                    it.leftProgress.toInt(), it.rightProgress.toInt()
+                                )
+                            } else {
+                                trimmingContainer.visibility = View.GONE
+                                timeLineTextContainer.visibility = View.GONE
+
+                            }
+
+
+                        })
+
+
+                    }
+                }
+
+
+            }
+
+        })
+
+        /*    mediaAttachmentViewModel.safetyIncidentSite.observe(this, Observer {
+                Toast.makeText(this, "ssss", Toast.LENGTH_SHORT).show()
+            })*/
+        mediaAttachmentViewModel.cleanAttachment()
+        lifecycle.coroutineScope.launch {
+            mediaAttachmentViewModel.mediaItems.collect {
+
+                mediaList.clear()
+                mediaList.addAll(it)
+                mediaAttachmentAdapter.notifyDataSetChanged()
+
+            }
+        }
 
         mTimeLineView = findViewById(R.id.timeLineView)
         mrangeSeekbar = findViewById(R.id.rangeSeekBarView)
         addMediaBtn = findViewById(R.id.addMediaBtn)
         trimTimeRangeTextView = findViewById(R.id.trimTimeRangeTextView)
         startDuration = findViewById(R.id.startTimeTextView)
-        endDurationText = findViewById(R.id.endTimeLineTextView)
-        fragment.setTrimLayoutListener(this)
+        endDurationText =
+            findViewById(R.id.endTimeLineTextView)/* fragment.setTrimLayoutListener(this)*/
         videoTrimmingListener = this
         progressDialog = Dialog(this)
         progressDialog.setContentView(R.layout.dialog_loading)
@@ -80,9 +162,36 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         mPostBtn = findViewById(R.id.mPostBtn)
         mrangeSeekbar.initMaxWidth()
         setMaxDurationInMs(10 * 10000)
+        mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
+            override fun onCreate(
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
+            ) {
+
+                // Do nothing
+            }
+
+            override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
+
+                Log.e("onSeeksss", "value $index  float ${value * 9.45}")
+
+                onSeekThumbs(rangeSeekBarView, index, value)
+            }
+
+            override fun onSeekStart(
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
+            ) {
+
+            }
+
+            override fun onSeekStop(
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
+            ) {
+
+            }
+        })
 
         mPostBtn.setOnClickListener {
-            if (fragment.getMediaList().isEmpty()) {
+            if (mediaList.isEmpty()) {
                 Toast.makeText(this, "Please select something", Toast.LENGTH_SHORT).show()
             } else {
 
@@ -93,7 +202,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
             }
         }
-        setMaxDurationInMs(10 * 10000)
+
         addMediaBtn.setOnClickListener {
             if (MediaTypeUtils.checkCamStoragePer(this)) {
                 openMultipleMedia()
@@ -114,36 +223,30 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
     fun encodeAttachmentsRecursive(index: Int) {
         encodeIndex = index
-        if (index >= fragment.getMediaList().size) {
-            showLoadingDialog("Encoding($index/${fragment.getMediaList().size - 1})")
+        if (index >= mediaList.size) {
+            showLoadingDialog("Encoding($index/${mediaList.size - 1})")
             Toast.makeText(this, "Encoded Successfully", Toast.LENGTH_SHORT).show()
             hideLoadingDialog()
             return
         }
-        showLoadingDialog("Encoding($index/${fragment.getMediaList().size - 1})")
+        showLoadingDialog("Encoding($index/${mediaList.size - 1})")
 
-        val uploadMediaAttachment = fragment.getMediaList().get(encodeIndex)
+        val uploadMediaAttachment = mediaList.get(encodeIndex)
         if (uploadMediaAttachment.isVideo) {
             val source = UriDataSource(this, Uri.parse(uploadMediaAttachment.path));
             val start = uploadMediaAttachment.trimFromStart
             val trimFromLeft = uploadMediaAttachment.trimFromEnd
 
             try {
-                val trim = TrimDataSource(
-                    source, (start * 1000).toLong(), (trimFromLeft * 1000).toLong()
-                );
                 val timeStamp =
                     SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val outputName = "trimmedVideo_$timeStamp.mp4"
                 val fileName = "trimmedVideo_${System.currentTimeMillis()}.mp4"
                 dstFile = File(parentFolder, fileName)
 
 
-
-                mVideoView.pause()
+                /*      mVideoView.pause()*/
 
                 videoTrimmingListener!!.onTrimStarted()
-                Log.e("sfasfsafasaf","${uploadMediaAttachment.trimFromStart} / ${uploadMediaAttachment.trimFromEnd}")
                 BackgroundExecutor.execute(object : BackgroundExecutor.Task(null, 100L, null) {
                     override fun execute() {
                         try {
@@ -167,11 +270,6 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
             }
 
 
-            /* if (!folder.exists()) {
-                 folder.mkdirs()
-             }*/
-
-
         } else {
             encodeAttachmentsRecursive(encodeIndex + 1)
         }
@@ -183,7 +281,8 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     private fun seekTo(msec: Long) {
-        this.mVideoView.seekTo(msec.toInt())
+        mediaAttachmentAdapter.seekTo(msec)
+
 
     }
 
@@ -191,7 +290,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     private fun showLoadingDialog(message: String) {
         progressDialog.show()
         val textMessage = progressDialog.findViewById<TextView>(R.id.textMessage)
-        textMessage.text = message // Update the text message as needed
+        textMessage.text = message
     }
 
 
@@ -199,27 +298,22 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         progressDialog.dismiss()
     }
 
-    private fun onSeekThumbs(index: Int, value: Float) {
+    private fun onSeekThumbs(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
 
         when (index) {
             RangeSeekBarView.ThumbType.LEFT.index -> {
-                // fragment.saveLeftRangeSeekBarPosition(currentPagePostion, value * 9.45)
                 startPosition = (mediaItem.duration * value / 100L).toInt()
+                mediaItem.lastLeftThumbPosition = rangeSeekBarView.getThumbPosition(index)
+                mediaAttachmentViewModel.updateMediaItem(mediaItem)
 
             }
 
             RangeSeekBarView.ThumbType.RIGHT.index -> {
-                //    fragment.saveRightRangeSeekBarPosition(currentPagePostion, value * 9.45)
+                mediaItem.lastRightThumbPosition = rangeSeekBarView.getThumbPosition(index)
                 endPosition = (mediaItem.duration * value / 100L).toInt()
+                mediaAttachmentViewModel.updateMediaItem(mediaItem)
             }
         }
-//        Log.d("SHUBH", "onSeekThumbs: $startPosition  $endPosition")
-        // setProgressBarPosition(startPosition)
-        /*
-               fragment.updateThumbPositionTimeValues(
-                    currentPagePostion, startPosition.toLong(), endPosition.toLong()
-                )*/
-        Log.e("Durations",startPosition.toString())
         onRangeUpdated(startPosition, endPosition)
         seekTo(startPosition.toLong())
         timeVideo = endPosition - startPosition
@@ -229,17 +323,14 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
     private fun onRangeUpdated(startTimeInMs: Int, endTimeInMs: Int) {
         val seconds = "Sec"
-
+        mediaItem.leftProgress = startTimeInMs.toLong()
+        mediaItem.rightProgress = endTimeInMs.toLong()
+        mediaAttachmentViewModel.updateMediaItem(mediaItem)
         startDuration.text = "${stringForTime(startTimeInMs)} $seconds "
         endDurationText.text = " ${stringForTime(endTimeInMs)} $seconds"
-
-       /* fragment.updateThumbPositionTimeValues(
-            currentPagePostion,
-            startTimeInMs.toLong(),
-            endTimeInMs.toLong()
-        )*/
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private val addMediaChooserResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
 
@@ -259,37 +350,64 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                         val mediaType = uri?.uri?.let { MediaTypeUtils.getMediaType(it) }
                         if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                             // Process as an image
-
-                            fragment.addMediaItem(
-                                MediaItem(
-                                    uri.uri.toString(),
-                                    0,
-                                    false,
-                                    0,
-                                    0,
-                                    10000,
-                                    0.0,
-                                    UnitConverter().dpToPx(385f).toDouble(),
-                                    0,
-                                    10000
-                                )
+                            val mediaItem = MediaItemEntity(
+                                uri.uri.toString(),
+                                0,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0f,
+                                UnitConverter().dpToPx(385f)
                             )
+
+                            mediaAttachmentViewModel.insertMediaItem(mediaItem)
+
+
+                            mediaAttachmentAdapter.notifyDataSetChanged()/* MediaItem(
+                                     uri.uri.toString(),
+                                     0,
+                                     false,
+                                     0,
+                                     0,
+                                     10000,
+                                     0.0,
+                                     UnitConverter().dpToPx(385f).toDouble(),
+                                     0,
+                                     10000
+                                 )*/
                         } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                             // Process as a video
-                            fragment.addMediaItem(
-                                MediaItem(
-                                    uri.uri.toString(),
-                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
-                                    true,
-                                    0,
-                                    0,
-                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
-                                    1.0,
-                                    UnitConverter().dpToPx(385f).toDouble(),
-                                    0,
-                                    MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString()))
-                                )
+
+                            val mediaItem = MediaItemEntity(
+                                uri.uri.toString(),
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
+                                true,
+                                0,
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
+                                0,
+                                MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
+                                0f,
+                                UnitConverter().dpToPx(385f)
                             )
+
+
+                            mediaAttachmentViewModel.insertMediaItem(mediaItem)
+                            mediaAttachmentAdapter.notifyDataSetChanged()/*   fragment.addMediaItem(
+                                   MediaItem(
+                                       uri.uri.toString(),
+                                       MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())),
+                                       true,
+                                       0,
+                                       0,
+                                       MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString())) - 10000,
+                                       1.0,
+                                       UnitConverter().dpToPx(385f).toDouble(),
+                                       0,
+                                       MediaTypeUtils.getVideoDuration(Uri.parse(uri.uri.toString()))
+                                   )
+                               )*/
                         }
 
                     }
@@ -300,23 +418,45 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                     if (mediaType == MediaTypeUtils.MediaType.IMAGE) {
                         // Process as an image
 
-                        fragment.addMediaItem(
-                            MediaItem(
-                                uri.toString(),
-                                0,
-                                false,
-                                0,
-                                0,
-                                10000,
-                                0.0,
-                                UnitConverter().dpToPx(385f).toDouble(),
-                                0,
-                                10000
-                            )
+                        /* fragment.addMediaItem(
+                             MediaItem(
+                                 uri.toString(),
+                                 0,
+                                 false,
+                                 0,
+                                 0,
+                                 10000,
+                                 0.0,
+                                 UnitConverter().dpToPx(385f).toDouble(),
+                                 0,
+                                 10000
+                             )*/
+                        val mediaItem = MediaItemEntity(
+                            uri.toString(), 0, false, 0, 0, 0, 0, 0f, UnitConverter().dpToPx(385f)
                         )
+
+
+                        mediaAttachmentViewModel.insertMediaItem(mediaItem)
+                        mediaAttachmentAdapter.notifyDataSetChanged()
+
                     } else if (mediaType == MediaTypeUtils.MediaType.VIDEO) {
                         // Process as a video
-                        fragment.addMediaItem(
+                        val mediaItem = MediaItemEntity(
+                            uri.toString(),
+                            MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
+                            true,
+                            0,
+                            MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
+                            0,
+                            MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
+                            0f,
+                            UnitConverter().dpToPx(385f)
+                        )/*  AppDatabase.getAppDataBase(applicationContext)?.mediaAttachmentDao()
+                              ?.insertMediaItem(
+                                  mediaItem
+                              )*/
+                        mediaAttachmentViewModel.insertMediaItem(mediaItem)
+                        mediaAttachmentAdapter.notifyDataSetChanged()/*fragment.addMediaItem(
                             MediaItem(
                                 uri.toString(),
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString())),
@@ -329,7 +469,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                                 0,
                                 MediaTypeUtils.getVideoDuration(Uri.parse(uri.toString()))
                             )
-                        )
+                        )*/
                     }
                 }
 
@@ -365,38 +505,36 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
         }
     }
 
-    fun setTimeLine(mediaItem: MediaItem) {
+    fun setTimeLine(mediaItem: MediaItemEntity) {
         BaseUtils.init(this)
         mTimeLineView.setVideo(Uri.parse(mediaItem.path), mediaItem)
         mTimeLineView.getBitmap(1080, 110)
 
     }
 
-    override fun showTrimLayout() {
-        /*      startDuration.visibility = View.VISIBLE
+    override fun showTrimLayout() {/*      startDuration.visibility = View.VISIBLE
               endDurationText.visibility = View.VISIBLE
               mTimeLineView.visibility = View.VISIBLE
               mrangeSeekbar.visibility = View.VISIBLE*/
     }
 
-    override fun hideTrimLayout() {
-        /* startDuration.visibility = View.GONE
+    override fun hideTrimLayout() {/* startDuration.visibility = View.GONE
          endDurationText.visibility = View.GONE
          mTimeLineView.visibility = View.GONE
          mrangeSeekbar.visibility = View.GONE*/
     }
-    lateinit var mediaItem: MediaItem
+
+    lateinit var mediaItem: MediaItemEntity
     override fun onMediaChange(position: Int, mediaItem: MediaItem) {
         currentPagePostion = position
 
-        this.mediaItem = mediaItem
+
         if (mediaItem.isVideo) {
 
 
-            setTimeLine(mediaItem)
+            /* setTimeLine(mediaItem)*/
             startPosition = 0
-            endPosition= mediaItem.duration.toInt()
-            /*   startPosition = 0
+            endPosition = mediaItem.duration.toInt()/*   startPosition = 0
                endPosition = MediaTypeUtils.getVideoDuration(
                    Uri.parse(mediaItem.path)
                ).toInt() / 2 + maxDurationInMs / 2
@@ -404,8 +542,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
                duration = MediaTypeUtils.getVideoDuration(
                    Uri.parse(mediaItem.path)
                ).toInt()
-   */
-            /*   mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
+   *//*   mrangeSeekbar.setThumbValue(0, startPosition * 100f / duration)
                mrangeSeekbar.setThumbValue(1, endPosition * 100f / duration)*/
 
             /* endPosition = MediaTypeUtils.getVideoDuration(
@@ -428,9 +565,14 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
             )
 
             // lastRightThumbPosition 1347.5   lastLeftThumbPosition 1.0  endPosition 52198 $
+
+
+            mrangeSeekbar.setThumbPos(0, 600f)
+            mrangeSeekbar.setThumbPos(1, 1340f)
+            mrangeSeekbar.setThumbValue(0, 60f)
+            mrangeSeekbar.setThumbValue(1, 80f)
             onRangeUpdated(
-                mediaItem.leftProgress.toInt(),
-                mediaItem.duration.toInt()
+                mediaItem.leftProgress.toInt(), mediaItem.rightProgress.toInt()
             )
 
         }
@@ -448,9 +590,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
         mrangeSeekbar.addOnRangeSeekBarListener(object : OnRangeSeekBarListener {
             override fun onCreate(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
             ) {
 
                 // Do nothing
@@ -459,21 +599,17 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
             override fun onSeek(rangeSeekBarView: RangeSeekBarView, index: Int, value: Float) {
 
                 Log.e("onSeeksss", "value $index  float ${value * 9.45}")
-                onSeekThumbs(index, value)
+                onSeekThumbs(rangeSeekBarView, index, value)
             }
 
             override fun onSeekStart(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
             ) {
 
             }
 
             override fun onSeekStop(
-                rangeSeekBarView: RangeSeekBarView,
-                index: Int,
-                value: Float
+                rangeSeekBarView: RangeSeekBarView, index: Int, value: Float
             ) {
 
             }
@@ -482,8 +618,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
 
     }
 
-    private fun setSeekBarPosition() {
-        /*  if (duration >= maxDurationInMs) {
+    private fun setSeekBarPosition() {/*  if (duration >= maxDurationInMs) {
               startPosition = duration / 2 - maxDurationInMs / 2
               endPosition = duration / 2 + maxDurationInMs / 2
 
@@ -512,7 +647,7 @@ class VideoTrimmerActivity : AppCompatActivity(), TrimLayoutListener, VideoTrimm
     }
 
     override fun onFinishedTrimming(uri: Uri?) {
-
+        Toast.makeText(applicationContext, "Finished", Toast.LENGTH_SHORT).show()
         encodeAttachmentsRecursive(encodeIndex + 1)
         hideLoadingDialog()
     }

@@ -70,7 +70,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         strokePaint.isAntiAlias = true
         strokePaint.style = Paint.Style.STROKE
         strokePaint.strokeWidth =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2f, context.resources.displayMetrics)
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, context.resources.displayMetrics)
         strokePaint.color =  context.resources.getColor(R.color.colorAccent)
         edgePaint.isAntiAlias = true
         edgePaint.color =  context.resources.getColor(R.color.white)
@@ -111,6 +111,8 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
                 thumb.pos = pixelRangeMax * index
 
             }
+
+
             // Fire listener callback
             onCreate(this, currentThumb, getThumbValue(currentThumb))
             firstRun = false
@@ -142,7 +144,7 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
             strokePaint
         )
         //draw edges
-        val circleRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 6f, context.resources.displayMetrics)
+        val circleRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f, context.resources.displayMetrics)
         canvas.drawCircle(
             (thumbs[ThumbType.LEFT.index].pos + paddingLeft + thumbWidth),
             height.toFloat() / 2f,
@@ -271,8 +273,11 @@ open class RangeSeekBarView @JvmOverloads constructor(context: Context, attrs: A
         }
     }
 
-    private fun getThumbValue(index: Int): Float {
+     fun getThumbValue(index: Int): Float {
         return thumbs[index].value
+    }
+    fun getThumbPosition(index: Int): Float {
+        return thumbs[index].pos
     }
 
     fun setThumbValue(index: Int, value: Float) {
